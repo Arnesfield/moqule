@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "lib": ["ES2017"],
+    "strict": true,
+    "sourceMap": true,
+    "stripInternal": true,
+    "noImplicitAny": true,
+    "removeComments": false,
+    "preserveConstEnums": true,
+    "moduleResolution": "node"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "lib", "tmp", "**/*.spec.ts"]
+}
