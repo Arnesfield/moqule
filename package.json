@@ -1,0 +1,19 @@
+{
+  "name": "moqule",
+  "version": "0.0.1-alpha.1",
+  "description": "A simple and minimal module system.",
+  "homepage": "https://github.com/Arnesfield/moqule#readme",
+  "bugs": {
+    "url": "https://github.com/Arnesfield/moqule/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arnesfield/moqule.git"
+  },
+  "license": "MIT",
+  "author": "Jefferson Rylee <rylee.jeff385@gmail.com>",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
