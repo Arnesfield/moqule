@@ -1,6 +1,7 @@
 import { ComponentId, ModuleRef } from '../types';
 import { compare, createProperties } from '../utils';
 import { ModuleData } from './moduleData';
+import { resolveComponent, ResolvedComponent } from './resolveComponent';
 
 export function createModuleRef(name: string, data: ModuleData): ModuleRef {
   const { listeners, components } = data;
@@ -11,28 +12,27 @@ export function createModuleRef(name: string, data: ModuleData): ModuleRef {
   ) => {
     if (typeof id === 'undefined') {
       throw new Error(
-        `Cannot get "undefined" component from module "${name}". ` +
-          'If this was not intentional, it could be caused by circular dependencies or imports.'
-      );
-    } else if (!data.compiled) {
-      const componentName = typeof id === 'string' ? id : id.name;
-      throw new Error(
-        `Cannot get component "${componentName}" before module "${name}" is compiled.`
+        `Cannot get "${id}" component from module "${name}". If this was not ` +
+          'intentional, it might be caused by circular dependencies or imports.'
       );
     }
-    const component = components.module.find(component => {
-      return compare(id, component.ref);
-    });
-    return component?.value as T | undefined;
+    const component = components.module.find(
+      (component): component is ResolvedComponent<T> => {
+        return compare(id, component.ref);
+      }
+    );
+    return component ? resolveComponent(component) : undefined;
   };
 
   const get: ModuleRef['get'] = <T = unknown>(id: ComponentId) => {
     const value = getOptional<T>(id);
-    if (!value) {
+    if (typeof value === 'undefined') {
       const componentName = typeof id === 'string' ? id : id.name;
       throw new Error(
         `Component "${componentName}" is not found in module "${name}".\n` +
           ` - Component needs to be registered in the module "${name}" components.\n` +
+          ' - If the component is intended to be "undefined", ' +
+          `consider using "moduleRef.getOptional(${componentName})" instead.\n` +
           ' - If the component comes from an imported module, it needs to be exported from that module.\n' +
           ' - If the component is provided by an ancestor module, ' +
           `module "${name}" should include it in "inject" options.\n`

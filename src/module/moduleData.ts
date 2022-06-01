@@ -1,5 +1,9 @@
 import { ModuleEventListener } from '../types';
-import { ComponentList } from './module.types';
+import { ResolvedComponent } from './resolveComponent';
+
+export type ComponentList = Readonly<
+  Record<'exported' | 'module' | 'self', ResolvedComponent[]>
+>;
 
 export interface ModuleData {
   compiled: boolean;

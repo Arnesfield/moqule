@@ -97,11 +97,16 @@ export function compile<T = unknown>(
 
     for (const ref of options.components || []) {
       if (typeof ref === 'function') {
-        saveComponent({ ref, value: new ref(moduleRef) });
+        saveComponent({ type: 'class', resolved: false, moduleRef, ref });
         continue;
       }
       for (const name in ref) {
-        saveComponent({ ref: ref[name], value: ref[name](moduleRef) });
+        saveComponent({
+          type: 'function',
+          resolved: false,
+          moduleRef,
+          ref: ref[name]
+        });
       }
     }
 
