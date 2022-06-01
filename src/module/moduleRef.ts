@@ -1,10 +1,17 @@
 import { ComponentId, ModuleRef } from '../types';
 import { compare, createProperties } from '../utils';
-import { ModuleData } from './moduleData';
 import { resolveComponent, ResolvedComponent } from './resolveComponent';
 
-export function createModuleRef(name: string, data: ModuleData): ModuleRef {
-  const { listeners, components } = data;
+export interface ComponentList {
+  readonly exported: ResolvedComponent[];
+  readonly module: ResolvedComponent[];
+  readonly self: ResolvedComponent[];
+}
+
+export function createModuleRef(
+  name: string,
+  components: ComponentList
+): ModuleRef {
   const moduleRef: ModuleRef = {} as ModuleRef;
 
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
@@ -41,14 +48,9 @@ export function createModuleRef(name: string, data: ModuleData): ModuleRef {
     return value;
   };
 
-  const on: ModuleRef['on'] = (event, callback) => {
-    listeners[event].push(callback);
-    return moduleRef;
-  };
-
   Object.defineProperties(
     moduleRef,
-    createProperties({ name, get, getOptional, on })
+    createProperties({ name, get, getOptional })
   );
   return moduleRef;
 }

@@ -13,18 +13,15 @@ export type ComponentId<T = any> =
   | ClassComponent<T>
   | FunctionComponent<T>;
 
-export type ModuleEventListener = (ref: ModuleRef) => void | Promise<void>;
-
 export interface ModuleRef {
   readonly name: string;
-  on(event: 'init' | 'resolve', callback: ModuleEventListener): this;
   get<T = unknown>(id: ComponentId<T>): T;
   getOptional<T = unknown>(id: ComponentId<T>): T | undefined;
 }
 
 export interface RegisteredModule<T = unknown> {
-  options: T;
-  module: Module<T>;
+  readonly options: T;
+  readonly module: Module<T>;
 }
 
 /** Module declaration. */
@@ -34,14 +31,7 @@ export interface Module<T = unknown> {
     | ModuleOptions
     | ((registerOptions: T | undefined) => ModuleOptions);
   register(options: T): RegisteredModule<T>;
-  resolve(): Promise<ModuleRef>;
-  resolve(
-    onCreateRef: (ref: ModuleRef) => void | Promise<void>
-  ): Promise<ModuleRef>;
-  resolve(
-    options: T | undefined,
-    onCreateRef?: (ref: ModuleRef) => void | Promise<void>
-  ): Promise<ModuleRef>;
+  resolve(options?: T): ModuleRef;
 }
 
 export interface ModuleOptions {

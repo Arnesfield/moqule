@@ -1,9 +1,4 @@
-import {
-  createModuleData,
-  createModuleRef,
-  ModuleData,
-  ResolvedComponent
-} from '../module';
+import { ComponentList, createModuleRef, ResolvedComponent } from '../module';
 import {
   ComponentId,
   Module,
@@ -14,17 +9,16 @@ import {
 import { compare } from '../utils';
 
 export interface CompiledModule<T = unknown> {
-  instance?: any;
-  data: ModuleData;
-  options: ModuleOptions;
-  module: Module<T>;
-  moduleRef: ModuleRef;
-  injectSources: Module[];
+  readonly module: Module<T>;
+  readonly moduleRef: ModuleRef;
+  readonly options: ModuleOptions;
+  readonly components: ComponentList;
+  readonly injectSources: Module[];
 }
 
 export interface CompileModuleResult<T = unknown> {
-  compiled: CompiledModule<T>;
-  modules: CompiledModule[];
+  readonly compiled: CompiledModule<T>;
+  readonly modules: CompiledModule[];
 }
 
 export function compile<T = unknown>(
@@ -40,9 +34,16 @@ export function compile<T = unknown>(
 
   const findByModule = (module: Module | RegisteredModule) => {
     const value = isRegisteredModule(module) ? module.module : module;
-    // assume to always find
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return compiledModules.find(compiled => compiled.module === value)!;
+    return compiledModules.find(compiled => compiled.module === value);
+  };
+
+  const createCompiledModule = <T = unknown>(
+    module: Module<T>,
+    options: ModuleOptions
+  ): CompiledModule<T> => {
+    const components: ComponentList = { exported: [], module: [], self: [] };
+    const moduleRef = createModuleRef(module.name, components);
+    return { module, moduleRef, options, components, injectSources: [] };
   };
 
   const compileModule = (declaration: Module | RegisteredModule) => {
@@ -52,24 +53,16 @@ export function compile<T = unknown>(
       return existingCompiled;
     }
     // get module options
-    const registered: RegisteredModule = isRegisteredModule(declaration)
+    const registered = isRegisteredModule(declaration)
       ? declaration
-      : { module: declaration, options: undefined };
+      : declaration.register(undefined);
     const { module } = registered;
     const options =
       typeof module.options === 'function'
         ? module.options(registered.options)
         : module.options;
     // save to compiled modules
-    const data = createModuleData();
-    const moduleRef = createModuleRef(module.name, data);
-    const compiledModule: CompiledModule = {
-      data,
-      module,
-      moduleRef,
-      options,
-      injectSources: []
-    };
+    const compiledModule = createCompiledModule(module, options);
     compiledModules.push(compiledModule);
     // handle components and submodules
     resolveComponents(compiledModule);
@@ -79,18 +72,18 @@ export function compile<T = unknown>(
 
   // resolve registered components of self
   const resolveComponents = (compiledModule: CompiledModule) => {
-    const { data, options, module, moduleRef } = compiledModule;
+    const { components, module, moduleRef, options } = compiledModule;
     // only export non-modules
     const exports = (options.exports || []).filter(
       (id): id is ComponentId => !!id && typeof id !== 'object'
     );
 
     const saveComponent = (component: ResolvedComponent) => {
-      data.components.self.push(component);
-      data.components.module.push(component);
+      components.self.push(component);
+      components.module.push(component);
       const index = exports.findIndex(value => compare(value, component.ref));
       if (index > -1) {
-        data.components.exported.push(component);
+        components.exported.push(component);
         exports.splice(index, 1);
       }
     };
@@ -127,38 +120,39 @@ export function compile<T = unknown>(
 
   // compile submodules and save exported to current
   const compileSubmodules = (compiledModule: CompiledModule) => {
-    const { data, options } = compiledModule;
     // compile all imported modules and get components
-    const { exports = [], imports = [] } = options;
+    const { exports = [], imports = [] } = compiledModule.options;
     for (const imported of imports) {
       const compiled = compileModule(imported);
       // get all exported components from imported module
-      const components = compiled.data.components.exported;
+      const components = compiled.components.exported;
       const shouldExport = exports.some(value => {
         return typeof value === 'object' && compare(value, compiled.module);
       });
       for (const component of components) {
-        data.components.module.push(component);
+        compiledModule.components.module.push(component);
         // re-export components from exported modules
         if (shouldExport) {
-          data.components.exported.push(component);
+          compiledModule.components.exported.push(component);
         }
       }
     }
   };
 
   const getProvidedComponents = (compiledModule: CompiledModule) => {
-    const { data, module, options } = compiledModule;
+    const { components, module, options } = compiledModule;
     // get all components to inject first
-    const components: ResolvedComponent[] = [];
+    const providedComponents: ResolvedComponent[] = [];
     for (const value of options.provide || []) {
       // if module, save its components
       if (typeof value === 'object') {
-        components.push(...findByModule(value).data.components.exported);
+        // assume to always find
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        providedComponents.push(...findByModule(value)!.components.exported);
         continue;
       }
       // otherwise, find component to provide from self
-      const component = data.components.self.find(component => {
+      const component = components.self.find(component => {
         return compare(value, component.ref);
       });
       if (!component) {
@@ -167,23 +161,24 @@ export function compile<T = unknown>(
           `Cannot provide missing component "${name}" from module "${module.name}".`
         );
       }
-      components.push(component);
+      providedComponents.push(component);
     }
-    return components;
+    return providedComponents;
   };
 
   const inject = (
     compiledSource: CompiledModule,
-    components: ResolvedComponent[],
+    providedComponents: ResolvedComponent[],
     targets: Exclude<ModuleOptions['imports'], undefined>
   ) => {
-    if (components.length === 0 || targets.length === 0) {
+    if (providedComponents.length === 0 || targets.length === 0) {
       return;
     }
     const source = compiledSource.module;
     for (const imported of targets) {
-      const module = findByModule(imported);
-      const { data, options, injectSources } = module;
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const module = findByModule(imported)!;
+      const { components, options, injectSources } = module;
       // skip if already injected to avoid circular injects
       if (injectSources.includes(source)) {
         continue;
@@ -191,17 +186,17 @@ export function compile<T = unknown>(
       injectSources.push(source);
       // include only if in inject options and not yet injected
       const injectOpts = options.inject || [];
-      for (const component of components) {
+      for (const component of providedComponents) {
         const shouldInject =
           typeof injectOpts === 'boolean'
             ? injectOpts
             : injectOpts.some(value => compare(value, component.ref));
-        if (shouldInject && !data.components.module.includes(component)) {
-          data.components.module.push(component);
+        if (shouldInject && !components.module.includes(component)) {
+          components.module.push(component);
         }
       }
       // inject components to submodules
-      inject(compiledSource, components, module.options.imports || []);
+      inject(compiledSource, providedComponents, module.options.imports || []);
     }
   };
 
@@ -213,10 +208,6 @@ export function compile<T = unknown>(
   for (const compiled of compiledModules) {
     const components = getProvidedComponents(compiled);
     inject(compiled, components, compiled.options.imports || []);
-  }
-  // set as compiled since every module is set up
-  for (const compiled of compiledModules) {
-    compiled.data.compiled = true;
   }
   return { compiled: compiledRoot, modules: compiledModules };
 }
