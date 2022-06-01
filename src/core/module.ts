@@ -1,23 +1,29 @@
 import { compile } from '../compiler';
 import { resolveComponent } from '../module';
-import { Module, ModuleOptions } from '../types';
+import { Module, ModuleMetadata } from '../types';
 import { createProperties } from '../utils';
 
 export function createModule<T = unknown>(
   name: string,
-  options: ModuleOptions
+  metadata: ModuleMetadata
 ): Module<T>;
 
 export function createModule<T = unknown>(
   name: string,
-  options: (registerOptions: T | undefined) => ModuleOptions
+  metadata: (options: T | undefined) => ModuleMetadata
 ): Module<T>;
 
 export function createModule<T = unknown>(
   name: string,
-  options: Module<T>['options']
+  getMetadata: ModuleMetadata | ((options: T | undefined) => ModuleMetadata)
 ): Module<T> {
   const module = {} as Module<T>;
+
+  const metadata: Module<T>['metadata'] = options => {
+    return typeof getMetadata === 'function'
+      ? getMetadata(options)
+      : getMetadata;
+  };
 
   const register: Module<T>['register'] = options => {
     return { options, module };
@@ -37,7 +43,7 @@ export function createModule<T = unknown>(
 
   Object.defineProperties(
     module,
-    createProperties({ name, options, register, resolve })
+    createProperties({ name, metadata, register, resolve })
   );
   return module;
 }

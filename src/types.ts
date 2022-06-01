@@ -1,14 +1,14 @@
-export interface ClassComponent<T = any> {
+export interface ClassComponent<T = unknown> {
   new (moduleRef: ModuleRef): T;
 }
 
-export type FunctionComponent<T = any> = (moduleRef: ModuleRef) => T;
+export type FunctionComponent<T = unknown> = (moduleRef: ModuleRef) => T;
 
 export type Component<T = unknown> =
   | ClassComponent<T>
-  | Record<string, FunctionComponent<T>>;
+  | { [K in string]?: FunctionComponent<T> };
 
-export type ComponentId<T = any> =
+export type ComponentId<T = unknown> =
   | string
   | ClassComponent<T>
   | FunctionComponent<T>;
@@ -27,14 +27,12 @@ export interface RegisteredModule<T = unknown> {
 /** Module declaration. */
 export interface Module<T = unknown> {
   readonly name: string;
-  readonly options:
-    | ModuleOptions
-    | ((registerOptions: T | undefined) => ModuleOptions);
+  metadata(options?: T): ModuleMetadata;
   register(options: T): RegisteredModule<T>;
   resolve(options?: T): ModuleRef;
 }
 
-export interface ModuleOptions {
+export interface ModuleMetadata {
   imports?: (Module | RegisteredModule)[];
   components?: Component[];
   exports?: (Module | ComponentId)[];

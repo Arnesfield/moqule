@@ -2,7 +2,7 @@ import { ComponentList, createModuleRef, ResolvedComponent } from '../module';
 import {
   ComponentId,
   Module,
-  ModuleOptions,
+  ModuleMetadata,
   ModuleRef,
   RegisteredModule
 } from '../types';
@@ -11,7 +11,7 @@ import { compare } from '../utils';
 export interface CompiledModule<T = unknown> {
   readonly module: Module<T>;
   readonly moduleRef: ModuleRef;
-  readonly options: ModuleOptions;
+  readonly metadata: ModuleMetadata;
   readonly components: ComponentList;
   readonly injectSources: Module[];
 }
@@ -39,11 +39,11 @@ export function compile<T = unknown>(
 
   const createCompiledModule = <T = unknown>(
     module: Module<T>,
-    options: ModuleOptions
+    metadata: ModuleMetadata
   ): CompiledModule<T> => {
     const components: ComponentList = { exported: [], module: [], self: [] };
     const moduleRef = createModuleRef(module.name, components);
-    return { module, moduleRef, options, components, injectSources: [] };
+    return { module, moduleRef, metadata, components, injectSources: [] };
   };
 
   const compileModule = (declaration: Module | RegisteredModule) => {
@@ -52,17 +52,14 @@ export function compile<T = unknown>(
     if (existingCompiled) {
       return existingCompiled;
     }
-    // get module options
+    // get module metadata
     const registered = isRegisteredModule(declaration)
       ? declaration
       : declaration.register(undefined);
     const { module } = registered;
-    const options =
-      typeof module.options === 'function'
-        ? module.options(registered.options)
-        : module.options;
+    const metadata = module.metadata(registered.options);
     // save to compiled modules
-    const compiledModule = createCompiledModule(module, options);
+    const compiledModule = createCompiledModule(module, metadata);
     compiledModules.push(compiledModule);
     // handle components and submodules
     resolveComponents(compiledModule);
@@ -72,9 +69,9 @@ export function compile<T = unknown>(
 
   // resolve registered components of self
   const resolveComponents = (compiledModule: CompiledModule) => {
-    const { components, module, moduleRef, options } = compiledModule;
+    const { components, metadata, module, moduleRef } = compiledModule;
     // only export non-modules
-    const exports = (options.exports || []).filter(
+    const exports = (metadata.exports || []).filter(
       (id): id is ComponentId => !!id && typeof id !== 'object'
     );
 
@@ -88,17 +85,21 @@ export function compile<T = unknown>(
       }
     };
 
-    for (const ref of options.components || []) {
+    for (const ref of metadata.components || []) {
       if (typeof ref === 'function') {
         saveComponent({ type: 'class', resolved: false, moduleRef, ref });
         continue;
       }
       for (const name in ref) {
+        const fn = ref[name];
+        if (typeof fn !== 'function') {
+          continue;
+        }
         saveComponent({
           type: 'function',
           resolved: false,
           moduleRef,
-          ref: ref[name]
+          ref: fn
         });
       }
     }
@@ -121,7 +122,7 @@ export function compile<T = unknown>(
   // compile submodules and save exported to current
   const compileSubmodules = (compiledModule: CompiledModule) => {
     // compile all imported modules and get components
-    const { exports = [], imports = [] } = compiledModule.options;
+    const { exports = [], imports = [] } = compiledModule.metadata;
     for (const imported of imports) {
       const compiled = compileModule(imported);
       // get all exported components from imported module
@@ -140,10 +141,10 @@ export function compile<T = unknown>(
   };
 
   const getProvidedComponents = (compiledModule: CompiledModule) => {
-    const { components, module, options } = compiledModule;
+    const { components, metadata, module } = compiledModule;
     // get all components to inject first
     const providedComponents: ResolvedComponent[] = [];
-    for (const value of options.provide || []) {
+    for (const value of metadata.provide || []) {
       // if module, save its components
       if (typeof value === 'object') {
         // assume to always find
@@ -169,7 +170,7 @@ export function compile<T = unknown>(
   const inject = (
     compiledSource: CompiledModule,
     providedComponents: ResolvedComponent[],
-    targets: Exclude<ModuleOptions['imports'], undefined>
+    targets: Exclude<ModuleMetadata['imports'], undefined>
   ) => {
     if (providedComponents.length === 0 || targets.length === 0) {
       return;
@@ -178,14 +179,14 @@ export function compile<T = unknown>(
     for (const imported of targets) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const module = findByModule(imported)!;
-      const { components, options, injectSources } = module;
+      const { components, metadata, injectSources } = module;
       // skip if already injected to avoid circular injects
       if (injectSources.includes(source)) {
         continue;
       }
       injectSources.push(source);
       // include only if in inject options and not yet injected
-      const injectOpts = options.inject || [];
+      const injectOpts = metadata.inject || false;
       for (const component of providedComponents) {
         const shouldInject =
           typeof injectOpts === 'boolean'
@@ -196,7 +197,7 @@ export function compile<T = unknown>(
         }
       }
       // inject components to submodules
-      inject(compiledSource, providedComponents, module.options.imports || []);
+      inject(compiledSource, providedComponents, module.metadata.imports || []);
     }
   };
 
@@ -207,7 +208,7 @@ export function compile<T = unknown>(
   // handle provided components
   for (const compiled of compiledModules) {
     const components = getProvidedComponents(compiled);
-    inject(compiled, components, compiled.options.imports || []);
+    inject(compiled, components, compiled.metadata.imports || []);
   }
   return { compiled: compiledRoot, modules: compiledModules };
 }
