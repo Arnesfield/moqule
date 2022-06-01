@@ -1,3 +1,3 @@
-import { createModule } from '.';
+import { moqule } from '.';
 
-export default createModule;
+export default moqule;

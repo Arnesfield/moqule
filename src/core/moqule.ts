@@ -3,23 +3,45 @@ import { resolveComponent } from '../module';
 import { Module, ModuleMetadata } from '../types';
 import { createProperties } from '../utils';
 
-export function createModule<T = unknown>(
+export type CreateModuleMetadata<T = unknown> =
+  | ModuleMetadata
+  | ((options: T | undefined) => ModuleMetadata);
+
+export function moqule<T = unknown>(
   name: string,
-  metadata: ModuleMetadata
+  metadata: CreateModuleMetadata<T>
 ): Module<T>;
 
-export function createModule<T = unknown>(
+export function moqule<T = unknown>(
   name: string,
-  metadata: (options: T | undefined) => ModuleMetadata
+  requireOptions: false,
+  metadata: CreateModuleMetadata<T>
 ): Module<T>;
 
-export function createModule<T = unknown>(
+export function moqule<T = unknown>(
   name: string,
-  getMetadata: ModuleMetadata | ((options: T | undefined) => ModuleMetadata)
+  requireOptions: true,
+  metadata: (options: T) => ModuleMetadata
+): Module<T>;
+
+export function moqule<T = unknown>(
+  name: string,
+  requireOptions: boolean | CreateModuleMetadata<T>,
+  getMetadata: CreateModuleMetadata<T> = {}
 ): Module<T> {
   const module = {} as Module<T>;
+  if (
+    requireOptions &&
+    (typeof requireOptions === 'object' || typeof requireOptions === 'function')
+  ) {
+    getMetadata = requireOptions;
+    requireOptions = false;
+  }
 
   const metadata: Module<T>['metadata'] = options => {
+    if (requireOptions && typeof options === 'undefined') {
+      throw new Error(`Module "${module.name}" requires register options.`);
+    }
     return typeof getMetadata === 'function'
       ? getMetadata(options)
       : getMetadata;
@@ -47,3 +69,5 @@ export function createModule<T = unknown>(
   );
   return module;
 }
+
+export { moqule as createModule };
