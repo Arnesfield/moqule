@@ -24,15 +24,22 @@ export interface CompileResult<T = unknown> {
   };
 }
 
+type ModuleOrComponent<T = unknown> =
+  | { readonly type: 'module'; readonly value: CompiledModule<T> }
+  | { readonly type: 'component'; readonly value: ResolvedComponent<T> };
+
 export function compile<T = unknown>(
   root: RegisteredModule<T>
 ): CompileResult<T> {
   const compiledModules: CompiledModule[] = [];
 
   const isRegisteredModule = <T = unknown>(
-    module: Module<T> | RegisteredModule<T>
-  ): module is RegisteredModule<T> => {
-    return typeof (module as any).module !== 'undefined';
+    value: any
+  ): value is RegisteredModule<T> => {
+    return (
+      typeof value.module === 'object' &&
+      typeof value.module.metadata === 'function'
+    );
   };
 
   const unwrapModule = <T = unknown>(
@@ -48,6 +55,33 @@ export function compile<T = unknown>(
     return compiledModules.find(
       (compiled): compiled is CompiledModule<T> => compiled.module === value
     );
+  };
+
+  const findModuleOrComponent = <T = unknown>(
+    compiledModule: CompiledModule<T>,
+    match: Module<T> | ComponentId<T>
+  ): ModuleOrComponent<T> | undefined => {
+    // match component id
+    const { components, metadata } = compiledModule;
+    const component =
+      typeof match !== 'object'
+        ? components.self.find(component => compare(match, component.ref))
+        : undefined;
+    if (component) {
+      return { type: 'component', value: component as ResolvedComponent<T> };
+    }
+    // match string or module, make sure is imported from module metadata
+    const isImported =
+      (typeof match === 'string' || typeof match === 'object') &&
+      (metadata.imports || []).some(imported => {
+        return compare(match, unwrapModule(imported));
+      });
+    const module = isImported
+      ? compiledModules.find(compiled => compare(match, compiled.module))
+      : undefined;
+    if (module) {
+      return { type: 'module', value: module as CompiledModule<T> };
+    }
   };
 
   const createCompiledModule = <T = unknown>(
@@ -156,40 +190,25 @@ export function compile<T = unknown>(
     }
   };
 
+  // includes module.components.self and imported.components.exported
   const getProvidedComponents = (compiledModule: CompiledModule) => {
-    const { components, metadata, module } = compiledModule;
+    const { metadata, module } = compiledModule;
     // get all components to inject first
-    const providedComponents: ResolvedComponent[] = [];
-    for (const value of metadata.provide || []) {
-      // if module, save its components
-      if (typeof value === 'object') {
-        const isImported = metadata.imports?.some(imported => {
-          return compare(value, unwrapModule(imported));
-        });
-        if (!isImported) {
-          throw new Error(
-            `Module "${module.name}" needs to import ` +
-              `module "${value.name}" in order to provide it.`
-          );
-        }
-        // assume to always find
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        providedComponents.push(...findByModule(value)!.components.exported);
-        continue;
-      }
-      // otherwise, find component to provide from self
-      const component = components.self.find(component => {
-        return compare(value, component.ref);
-      });
-      if (!component) {
-        const name = typeof value === 'string' ? value : value.name;
+    const components: ResolvedComponent[] = [];
+    for (const id of metadata.provide || []) {
+      const result = findModuleOrComponent(compiledModule, id);
+      if (!result) {
+        const label = typeof id === 'string' ? id : id.name;
         throw new Error(
-          `Cannot provide missing component "${name}" from module "${module.name}".`
+          `Module "${module.name}" needs to import the module ` +
+            `or component "${label}" in order to provide it.`
         );
       }
-      providedComponents.push(component);
+      const { type, value } = result;
+      const all = type === 'module' ? value.components.exported : [value];
+      components.push(...all);
     }
-    return providedComponents;
+    return components;
   };
 
   const inject = (
