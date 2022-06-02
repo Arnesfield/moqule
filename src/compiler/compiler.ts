@@ -32,9 +32,19 @@ export function compile<T = unknown>(
     return typeof (module as any).module !== 'undefined';
   };
 
-  const findByModule = (module: Module | RegisteredModule) => {
-    const value = isRegisteredModule(module) ? module.module : module;
-    return compiledModules.find(compiled => compiled.module === value);
+  const unwrapModule = <T = unknown>(
+    module: Module<T> | RegisteredModule<T>
+  ) => {
+    return isRegisteredModule(module) ? module.module : module;
+  };
+
+  const findByModule = <T = unknown>(
+    module: Module<T> | RegisteredModule<T>
+  ) => {
+    const value = unwrapModule(module);
+    return compiledModules.find(
+      (compiled): compiled is CompiledModule<T> => compiled.module === value
+    );
   };
 
   const createCompiledModule = <T = unknown>(
@@ -116,19 +126,20 @@ export function compile<T = unknown>(
   // compile submodules and save exported to current
   const compileSubmodules = (compiledModule: CompiledModule) => {
     // compile all imported modules and get components
+    const { components } = compiledModule;
     const { exports = [], imports = [] } = compiledModule.metadata;
     for (const imported of imports) {
       const compiled = compileModule(imported);
       // get all exported components from imported module
-      const components = compiled.components.exported;
+      const { exported } = compiled.components;
       const shouldExport = exports.some(value => {
         return typeof value === 'object' && compare(value, compiled.module);
       });
-      for (const component of components) {
-        compiledModule.components.module.push(component);
+      for (const component of exported) {
+        components.module.push(component);
         // re-export components from exported modules
         if (shouldExport) {
-          compiledModule.components.exported.push(component);
+          components.exported.push(component);
         }
       }
     }
@@ -140,8 +151,16 @@ export function compile<T = unknown>(
     const providedComponents: ResolvedComponent[] = [];
     for (const value of metadata.provide || []) {
       // if module, save its components
-      // TODO: make sure value is imported
       if (typeof value === 'object') {
+        const isImported = metadata.imports?.some(imported => {
+          return compare(value, unwrapModule(imported));
+        });
+        if (!isImported) {
+          throw new Error(
+            `Module "${module.name}" needs to import ` +
+              `module "${value.name}" in order to provide it.`
+          );
+        }
         // assume to always find
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         providedComponents.push(...findByModule(value)!.components.exported);
@@ -192,7 +211,7 @@ export function compile<T = unknown>(
         }
       }
       // inject components to submodules
-      inject(compiledSource, providedComponents, module.metadata.imports || []);
+      inject(compiledSource, providedComponents, metadata.imports || []);
     }
   };
 
