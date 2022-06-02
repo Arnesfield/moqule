@@ -1,10 +1,11 @@
+import typescript from '@rollup/plugin-typescript';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
 import pkg from './package.json';
 
 const input = 'src/index.ts';
 const inputUmd = 'src/index.umd.ts';
-const plugins = [esbuild()];
+const plugins = [typescript(), esbuild()];
 
 function output(...formats) {
   return formats.map(format => {
