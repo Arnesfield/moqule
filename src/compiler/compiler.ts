@@ -146,6 +146,7 @@ export function compile<T = unknown>(
     const providedComponents: ResolvedComponent[] = [];
     for (const value of metadata.provide || []) {
       // if module, save its components
+      // TODO: make sure value is imported
       if (typeof value === 'object') {
         // assume to always find
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

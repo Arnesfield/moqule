@@ -7,36 +7,26 @@ export type CreateModuleMetadata<T = unknown> =
   | ModuleMetadata
   | ((options: T | undefined) => ModuleMetadata);
 
+export type CreateModuleOptions<T = unknown> =
+  | { name: string; register?: false; metadata: CreateModuleMetadata<T> }
+  | { name: string; register: true; metadata(options: T): ModuleMetadata };
+
+export function moqule<T = unknown>(options: CreateModuleOptions<T>): Module<T>;
+
 export function moqule<T = unknown>(
   name: string,
   metadata: CreateModuleMetadata<T>
 ): Module<T>;
 
 export function moqule<T = unknown>(
-  name: string,
-  requireOptions: false,
-  metadata: CreateModuleMetadata<T>
-): Module<T>;
-
-export function moqule<T = unknown>(
-  name: string,
-  requireOptions: true,
-  metadata: (options: T) => ModuleMetadata
-): Module<T>;
-
-export function moqule<T = unknown>(
-  name: string,
-  requireOptions: boolean | CreateModuleMetadata<T>,
-  getMetadata: CreateModuleMetadata<T> = {}
+  _name: string | CreateModuleOptions<T>,
+  _metadata: CreateModuleMetadata<T> = {}
 ): Module<T> {
   const module = {} as Module<T>;
-  if (
-    requireOptions &&
-    (typeof requireOptions === 'object' || typeof requireOptions === 'function')
-  ) {
-    getMetadata = requireOptions;
-    requireOptions = false;
-  }
+  const opts: CreateModuleOptions<T> =
+    typeof _name === 'string' ? { name: _name, metadata: _metadata } : _name;
+  const { name, register: requireOptions } = opts;
+  const getMetadata = opts.metadata as CreateModuleMetadata<T>;
 
   const metadata: Module<T>['metadata'] = options => {
     if (requireOptions && typeof options === 'undefined') {
@@ -69,5 +59,3 @@ export function moqule<T = unknown>(
   );
   return module;
 }
-
-export { moqule as createModule };

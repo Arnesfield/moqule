@@ -31,7 +31,7 @@ export function createModuleRef(
     return component ? resolveComponent(component) : undefined;
   };
 
-  const get: ModuleRef['get'] = <T = unknown>(id: ComponentId) => {
+  const get: ModuleRef['get'] = <T = unknown>(id: ComponentId<T>) => {
     const value = getOptional<T>(id);
     if (typeof value === 'undefined') {
       const componentName = typeof id === 'string' ? id : id.name;
