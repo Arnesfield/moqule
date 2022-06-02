@@ -34,12 +34,14 @@ export function createModuleRef(
   const get: ModuleRef['get'] = <T = unknown>(id: ComponentId<T>) => {
     const value = getOptional<T>(id);
     if (typeof value === 'undefined') {
-      const componentName = typeof id === 'string' ? id : id.name;
+      const wrap = typeof id === 'string';
+      const componentName = wrap ? id : id.name;
+      const wrappedName = wrap ? `"${componentName}"` : componentName;
       throw new Error(
         `Component "${componentName}" is not found in module "${name}".\n` +
           ` - Component needs to be registered in the module "${name}" components.\n` +
-          ' - If the component is intended to be "undefined", ' +
-          `consider using "moduleRef.getOptional(${componentName})" instead.\n` +
+          ` - Consider using \`moduleRef.getOptional(${wrappedName})\` ` +
+          'if the component is intended to be "undefined".\n' +
           ' - If the component comes from an imported module, it needs to be exported from that module.\n' +
           ' - If the component is provided by an ancestor module, ' +
           `module "${name}" should include it in "inject" options.\n`
