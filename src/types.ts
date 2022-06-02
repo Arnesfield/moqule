@@ -8,6 +8,8 @@ export type Component<T = unknown> =
   | ClassComponent<T>
   | { [K in string]?: FunctionComponent<T> };
 
+export type AsyncComponent<T = unknown> = () => Promise<T>;
+
 export type ComponentId<T = unknown> =
   | string
   | ClassComponent<T>
@@ -15,8 +17,8 @@ export type ComponentId<T = unknown> =
 
 export interface ModuleRef {
   readonly name: string;
-  get<T = unknown>(id: ComponentId<T>): T;
-  getOptional<T = unknown>(id: ComponentId<T>): T | undefined;
+  get<T = unknown>(id: ComponentId<T>): Awaited<T>;
+  getOptional<T = unknown>(id: ComponentId<T>): Awaited<T> | undefined;
 }
 
 export interface RegisteredModule<T = unknown> {
@@ -29,12 +31,14 @@ export interface Module<T = unknown> {
   readonly name: string;
   metadata(options?: T): ModuleMetadata;
   register(options: T): RegisteredModule<T>;
-  resolve(options?: T): ModuleRef;
+  resolve(options?: T): Promise<ModuleRef>;
+  resolveSync(options?: T): ModuleRef;
 }
 
 export interface ModuleMetadata {
   imports?: (Module | RegisteredModule)[];
   components?: Component[];
+  asyncComponents?: { [K in string]?: AsyncComponent }[];
   exports?: (Module | ComponentId)[];
   provide?: (Module | ComponentId)[];
   inject?: boolean | ComponentId[];

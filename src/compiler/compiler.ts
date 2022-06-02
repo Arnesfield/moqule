@@ -16,14 +16,17 @@ export interface CompiledModule<T = unknown> {
   readonly injectSources: Module[];
 }
 
-export interface CompileModuleResult<T = unknown> {
+export interface CompileResult<T = unknown> {
   readonly compiled: CompiledModule<T>;
-  readonly modules: CompiledModule[];
+  readonly components: {
+    readonly sync: ResolvedComponent[];
+    readonly async: ResolvedComponent[];
+  };
 }
 
 export function compile<T = unknown>(
   root: RegisteredModule<T>
-): CompileModuleResult<T> {
+): CompileResult<T> {
   const compiledModules: CompiledModule[] = [];
 
   const isRegisteredModule = <T = unknown>(
@@ -104,6 +107,14 @@ export function compile<T = unknown>(
         const fn = ref[name];
         if (typeof fn === 'function') {
           saveComponent({ type: 'function', moduleRef, ref: fn });
+        }
+      }
+    }
+    for (const ref of metadata.asyncComponents || []) {
+      for (const name in ref) {
+        const fn = ref[name];
+        if (typeof fn === 'function') {
+          saveComponent({ type: 'async', moduleRef, ref: fn });
         }
       }
     }
@@ -224,5 +235,13 @@ export function compile<T = unknown>(
     const components = getProvidedComponents(compiled);
     inject(compiled, components, compiled.metadata.imports || []);
   }
-  return { compiled: compiledRoot, modules: compiledModules };
+  // get all components
+  const components: CompileResult['components'] = { sync: [], async: [] };
+  for (const compiled of compiledModules) {
+    for (const component of compiled.components.self) {
+      const type = component.type === 'async' ? 'async' : 'sync';
+      components[type].push(component);
+    }
+  }
+  return { compiled: compiledRoot, components };
 }
