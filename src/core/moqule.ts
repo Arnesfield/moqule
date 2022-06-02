@@ -41,8 +41,7 @@ export function moqule<T = unknown>(
     return { options, module };
   };
 
-  // try to be as sync as possible
-  const resolveComponents = (components: CompileResult['components']) => {
+  const resolveComponents = async (components: CompileResult['components']) => {
     const resolveSync = () => {
       for (const component of components.sync) {
         resolveComponent(component);
@@ -56,7 +55,8 @@ export function moqule<T = unknown>(
       resolveComponent(component);
       return component.asyncValue;
     });
-    return Promise.all(promises).then(() => resolveSync());
+    await Promise.all(promises);
+    resolveSync();
   };
 
   const resolve: Module<T>['resolve'] = async options => {

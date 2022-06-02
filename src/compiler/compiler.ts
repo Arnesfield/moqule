@@ -236,12 +236,12 @@ export function compile<T = unknown>(
     inject(compiled, components, compiled.metadata.imports || []);
   }
   // get all components
-  const components: CompileResult['components'] = { sync: [], async: [] };
+  const allComponents: CompileResult['components'] = { sync: [], async: [] };
   for (const compiled of compiledModules) {
     for (const component of compiled.components.self) {
       const type = component.type === 'async' ? 'async' : 'sync';
-      components[type].push(component);
+      allComponents[type].push(component);
     }
   }
-  return { compiled: compiledRoot, components };
+  return { compiled: compiledRoot, components: allComponents };
 }
