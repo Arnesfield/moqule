@@ -111,11 +111,6 @@ export function compile<T = unknown>(
     // handle components and submodules
     resolveComponents(compiledModule);
     compileSubmodules(compiledModule);
-    // inject components if there are submodules
-    const submodules = compiledModule.metadata.imports || [];
-    if (submodules.length > 0) {
-      inject(compiledModule, getProvidedComponents(compiledModule), submodules);
-    }
     return compiledModule;
   };
 
@@ -253,10 +248,22 @@ export function compile<T = unknown>(
     }
   };
 
-  // compile all modules
+  const injectComponents = () => {
+    for (const compiled of compiledModules) {
+      // inject components if there are submodules
+      const submodules = compiled.metadata.imports || [];
+      if (submodules.length > 0) {
+        inject(compiled, getProvidedComponents(compiled), submodules);
+      }
+    }
+  };
+
+  // compile all modules first
   const compiledRoot = compileModule(
     root as RegisteredModule
   ) as CompiledModule<T>;
+  // handle provided components
+  injectComponents();
   // get all components
   const allComponents: CompileResult['components'] = { sync: [], async: [] };
   for (const compiled of compiledModules) {
