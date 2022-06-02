@@ -7,21 +7,15 @@ const input = 'src/index.ts';
 const inputUmd = 'src/index.umd.ts';
 const plugins = [typescript(), esbuild()];
 
-function output(...formats) {
-  return formats.map(format => {
-    return {
-      dir: `lib/${format}`,
-      format,
-      preserveModules: true,
-      preserveModulesRoot: 'src',
-      sourcemap: true,
-      exports: 'named'
-    };
-  });
-}
-
 export default [
-  { input, output: output('cjs', 'esm'), plugins },
+  {
+    input,
+    output: [
+      { file: pkg.main, format: 'cjs', sourcemap: true, exports: 'named' },
+      { file: pkg.module, format: 'esm', sourcemap: true, exports: 'named' }
+    ],
+    plugins
+  },
   {
     input: inputUmd,
     output: {
@@ -33,14 +27,5 @@ export default [
     },
     plugins
   },
-  {
-    input,
-    output: {
-      dir: pkg.types.slice(0, pkg.types.lastIndexOf('/')),
-      format: 'esm',
-      preserveModules: true,
-      preserveModulesRoot: 'src'
-    },
-    plugins: [dts()]
-  }
+  { input, output: { file: pkg.types, format: 'esm' }, plugins: [dts()] }
 ];

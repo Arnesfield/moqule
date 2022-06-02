@@ -14,14 +14,14 @@
   "author": "Jefferson Rylee <rylee.jeff385@gmail.com>",
   "sideEffects": false,
   "exports": {
-    "import": "./lib/esm/index.js",
-    "require": "./lib/cjs/index.js",
-    "default": "./lib/esm/index.js"
+    "import": "./lib/index.mjs",
+    "require": "./lib/index.cjs",
+    "default": "./lib/index.mjs"
   },
-  "main": "lib/cjs/index.js",
-  "module": "lib/esm/index.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
   "browser": "lib/index.umd.js",
-  "types": "lib/types/index.d.ts",
+  "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
