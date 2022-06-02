@@ -3,16 +3,65 @@ import { resolveComponent } from '../module';
 import { Module, ModuleMetadata } from '../types';
 import { createProperties } from '../utils';
 
+/**
+ * Create module metadata.
+ * @template T The register options type.
+ */
 export type CreateModuleMetadata<T = unknown> =
   | ModuleMetadata
   | ((options: T | undefined) => ModuleMetadata);
 
+/**
+ * Create module options.
+ * @template T The register options type.
+ */
 export type CreateModuleOptions<T = unknown> =
-  | { name: string; register?: false; metadata: CreateModuleMetadata<T> }
-  | { name: string; register: true; metadata(options: T): ModuleMetadata };
+  | {
+      /**
+       * The module name.
+       */
+      name: string;
+      /**
+       * Determines if register options is required.
+       */
+      register?: false;
+      /**
+       * The module metadata.
+       */
+      metadata: CreateModuleMetadata<T>;
+    }
+  | {
+      /**
+       * The module name.
+       */
+      name: string;
+      /**
+       * Determines if register options is required.
+       */
+      register: true;
+      /**
+       * Get the module metadata.
+       * @param options The register options.
+       * @returns The module metadata.
+       */
+      metadata(options: T): ModuleMetadata;
+    };
 
+/**
+ * Create a module declaration.
+ * @template T The register options type.
+ * @param options The create module options.
+ * @returns The module declaration.
+ */
 export function moqule<T = unknown>(options: CreateModuleOptions<T>): Module<T>;
 
+/**
+ * Create a module declaration.
+ * @template T The register options type.
+ * @param name The module name.
+ * @param metadata The module metadata.
+ * @returns The module declaration.
+ */
 export function moqule<T = unknown>(
   name: string,
   metadata: CreateModuleMetadata<T>
