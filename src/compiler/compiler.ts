@@ -111,6 +111,11 @@ export function compile<T = unknown>(
     // handle components and submodules
     resolveComponents(compiledModule);
     compileSubmodules(compiledModule);
+    // inject components if there are submodules
+    const submodules = compiledModule.metadata.imports || [];
+    if (submodules.length > 0) {
+      inject(compiledModule, getProvidedComponents(compiledModule), submodules);
+    }
     return compiledModule;
   };
 
@@ -144,6 +149,7 @@ export function compile<T = unknown>(
         }
       }
     }
+    // TODO: allow named functions
     for (const ref of metadata.asyncComponents || []) {
       for (const name in ref) {
         const fn = ref[name];
@@ -175,12 +181,14 @@ export function compile<T = unknown>(
     const { exports = [], imports = [] } = compiledModule.metadata;
     for (const imported of imports) {
       const compiled = compileModule(imported);
-      // get all exported components from imported module
-      const { exported } = compiled.components;
       const shouldExport = exports.some(value => {
-        return typeof value === 'object' && compare(value, compiled.module);
+        return (
+          (typeof value === 'string' || typeof value === 'object') &&
+          compare(value, compiled.module)
+        );
       });
-      for (const component of exported) {
+      // get all exported components from imported module
+      for (const component of compiled.components.exported) {
         components.module.push(component);
         // re-export components from exported modules
         if (shouldExport) {
@@ -245,15 +253,10 @@ export function compile<T = unknown>(
     }
   };
 
-  // compile all modules first
+  // compile all modules
   const compiledRoot = compileModule(
     root as RegisteredModule
   ) as CompiledModule<T>;
-  // handle provided components
-  for (const compiled of compiledModules) {
-    const components = getProvidedComponents(compiled);
-    inject(compiled, components, compiled.metadata.imports || []);
-  }
   // get all components
   const allComponents: CompileResult['components'] = { sync: [], async: [] };
   for (const compiled of compiledModules) {
