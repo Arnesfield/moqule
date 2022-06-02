@@ -87,20 +87,14 @@ export function compile<T = unknown>(
 
     for (const ref of metadata.components || []) {
       if (typeof ref === 'function') {
-        saveComponent({ type: 'class', resolved: false, moduleRef, ref });
+        saveComponent({ type: 'class', moduleRef, ref });
         continue;
       }
       for (const name in ref) {
         const fn = ref[name];
-        if (typeof fn !== 'function') {
-          continue;
+        if (typeof fn === 'function') {
+          saveComponent({ type: 'function', moduleRef, ref: fn });
         }
-        saveComponent({
-          type: 'function',
-          resolved: false,
-          moduleRef,
-          ref: fn
-        });
       }
     }
 

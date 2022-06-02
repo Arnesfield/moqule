@@ -2,11 +2,11 @@ import { ClassComponent, FunctionComponent, ModuleRef } from '../types';
 
 export type ResolvedComponent<T = unknown> = {
   value?: T;
-  resolved: boolean;
-  moduleRef: ModuleRef;
+  resolved?: boolean;
+  readonly moduleRef: ModuleRef;
 } & (
-  | { type: 'class'; ref: ClassComponent<T> }
-  | { type: 'function'; ref: FunctionComponent<T> }
+  | { readonly type: 'class'; readonly ref: ClassComponent<T> }
+  | { readonly type: 'function'; readonly ref: FunctionComponent<T> }
 );
 
 export function resolveComponent<T = unknown>(value: ResolvedComponent<T>): T {
