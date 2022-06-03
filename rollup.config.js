@@ -1,11 +1,24 @@
 import typescript from '@rollup/plugin-typescript';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
+import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
 
+const name = pkg.name.slice(pkg.name.lastIndexOf('/') + 1);
 const input = 'src/index.ts';
 const inputUmd = 'src/index.umd.ts';
 const plugins = [typescript(), esbuild()];
+
+function umd(options) {
+  return {
+    file: pkg.browser,
+    format: 'umd',
+    name,
+    sourcemap: true,
+    exports: 'default',
+    ...options
+  };
+}
 
 export default [
   {
@@ -18,13 +31,13 @@ export default [
   },
   {
     input: inputUmd,
-    output: {
-      file: pkg.browser,
-      format: 'umd',
-      name: pkg.name.slice(pkg.name.lastIndexOf('/') + 1),
-      sourcemap: true,
-      exports: 'default'
-    },
+    output: [
+      umd(),
+      umd({
+        file: pkg.browser.replace(/\.js$/, '.min.js'),
+        plugins: [terser()]
+      })
+    ],
     plugins
   },
   { input, output: { file: pkg.types, format: 'esm' }, plugins: [dts()] }
