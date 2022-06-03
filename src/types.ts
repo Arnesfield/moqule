@@ -19,14 +19,6 @@ export interface ClassComponent<T = unknown> {
 export type FunctionComponent<T = unknown> = (moduleRef: ModuleRef) => T;
 
 /**
- * Module component (class or function).
- * @template T The component value or instance type.
- */
-export type Component<T = unknown> =
-  | ClassComponent<T>
-  | { [K in string]?: FunctionComponent<T> };
-
-/**
  * Async component.
  * @template T The component value or instance type.
  * @returns The async component value or instance.
@@ -34,13 +26,25 @@ export type Component<T = unknown> =
 export type AsyncComponent<T = unknown> = () => Promise<T>;
 
 /**
- * Component class, function, or name.
+ * Module component.
+ * @template T The component value or instance type.
+ */
+export type Component<T = unknown> =
+  | ClassComponent<T>
+  | FunctionComponent<T>
+  | AsyncComponent<T>
+  | { [K in string]?: FunctionComponent<T> }
+  | { [K in string]?: AsyncComponent<T> };
+
+/**
+ * Component class, function, async function, or name.
  * @template T The component value or instance type.
  */
 export type ComponentId<T = unknown> =
   | string
   | ClassComponent<T>
-  | FunctionComponent<T>;
+  | FunctionComponent<T>
+  | AsyncComponent<T>;
 
 /**
  * Module reference.
@@ -103,9 +107,9 @@ export interface Module<T = unknown> {
   /**
    * Resolve all modules and components.
    *
-   * All `asyncComponents` are resolved before the promise is fulfilled.
+   * All async components are resolved before the promise is fulfilled.
    *
-   * You may use `resolveSync(options)` if no module is using `asyncComponents`.
+   * You may use `resolveSync(options)` if no module is using async components.
    * @param options The register options.
    * @returns The module reference.
    */
@@ -113,13 +117,31 @@ export interface Module<T = unknown> {
   /**
    * Resolve all modules and components.
    *
-   * All `asyncComponents` are resolved asynchronously.
+   * All async components are resolved asynchronously.
    *
-   * You may use `resolve(options)` if at least one module is using `asyncComponents`.
+   * You may use `resolve(options)` if at least one module is using async components.
    * @param options The register options.
    * @returns The module reference.
    */
   resolveSync(options?: T): ModuleRef;
+}
+
+/**
+ * Module components.
+ */
+export interface ModuleComponents {
+  /**
+   * Class components to register for this module.
+   */
+  class?: ClassComponent[];
+  /**
+   * Function components to register for this module.
+   */
+  function?: (FunctionComponent | { [K in string]?: FunctionComponent })[];
+  /**
+   * Async function components to register for this module.
+   */
+  async?: (AsyncComponent | { [K in string]?: AsyncComponent })[];
 }
 
 /**
@@ -133,11 +155,7 @@ export interface ModuleMetadata {
   /**
    * Components to register for this module.
    */
-  components?: Component[];
-  /**
-   * Async components to register for this module.
-   */
-  asyncComponents?: (AsyncComponent | { [K in string]?: AsyncComponent })[];
+  components?: ClassComponent[] | ModuleComponents;
   /**
    * Modules, components, or name strings to export.
    */

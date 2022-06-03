@@ -1,5 +1,6 @@
 import { ComponentList, createModuleRef, ResolvedComponent } from '../module';
 import {
+  AsyncComponent,
   ComponentId,
   Module,
   ModuleMetadata,
@@ -132,27 +133,24 @@ export function compile<T = unknown>(
       }
     };
 
-    for (const ref of metadata.components || []) {
-      if (typeof ref === 'function') {
-        saveComponent({ type: 'class', moduleRef, ref });
-        continue;
-      }
-      for (const name in ref) {
-        const fn = ref[name];
-        if (typeof fn === 'function') {
-          saveComponent({ type: 'function', moduleRef, ref: fn });
-        }
-      }
+    const moduleComponents = Array.isArray(metadata.components)
+      ? { class: metadata.components }
+      : metadata.components || {};
+
+    for (const ref of moduleComponents.class || []) {
+      saveComponent({ type: 'class', moduleRef, ref });
     }
-    for (const ref of metadata.asyncComponents || []) {
-      if (typeof ref === 'function') {
-        saveComponent({ type: 'async', ref });
-        continue;
-      }
-      for (const name in ref) {
-        const fn = ref[name];
-        if (typeof fn === 'function') {
-          saveComponent({ type: 'async', ref: fn });
+    for (const type of ['function', 'async'] as const) {
+      for (const value of moduleComponents[type] || []) {
+        const obj = typeof value === 'function' ? { value } : value;
+        for (const name in obj) {
+          // cast as AsyncComponent so it works for both cases
+          const ref = obj[name] as AsyncComponent | undefined;
+          if (typeof ref === 'function') {
+            saveComponent(
+              type === 'async' ? { type, ref } : { type, moduleRef, ref }
+            );
+          }
         }
       }
     }
