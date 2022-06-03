@@ -144,12 +144,15 @@ export function compile<T = unknown>(
         }
       }
     }
-    // TODO: allow named functions
     for (const ref of metadata.asyncComponents || []) {
+      if (typeof ref === 'function') {
+        saveComponent({ type: 'async', ref });
+        continue;
+      }
       for (const name in ref) {
         const fn = ref[name];
         if (typeof fn === 'function') {
-          saveComponent({ type: 'async', moduleRef, ref: fn });
+          saveComponent({ type: 'async', ref: fn });
         }
       }
     }

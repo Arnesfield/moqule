@@ -137,7 +137,7 @@ export interface ModuleMetadata {
   /**
    * Async components to register for this module.
    */
-  asyncComponents?: { [K in string]?: AsyncComponent }[];
+  asyncComponents?: (AsyncComponent | { [K in string]?: AsyncComponent })[];
   /**
    * Modules, components, or name strings to export.
    */

@@ -9,11 +9,18 @@ export type ResolvedComponent<T = unknown> = {
   value?: T;
   resolved?: boolean;
   asyncValue?: Promise<T>;
-  readonly moduleRef: ModuleRef;
 } & (
-  | { readonly type: 'class'; readonly ref: ClassComponent<T> }
+  | {
+      readonly type: 'class';
+      readonly moduleRef: ModuleRef;
+      readonly ref: ClassComponent<T>;
+    }
+  | {
+      readonly type: 'function';
+      readonly moduleRef: ModuleRef;
+      readonly ref: FunctionComponent<T>;
+    }
   | { readonly type: 'async'; readonly ref: AsyncComponent<T> }
-  | { readonly type: 'function'; readonly ref: FunctionComponent<T> }
 );
 
 export function resolveComponent<T = unknown>(
@@ -23,8 +30,9 @@ export function resolveComponent<T = unknown>(
     return value.value as Awaited<T>;
   }
   value.resolved = true;
-  const { ref, type, moduleRef } = value;
+  const { ref, type } = value;
   if (type !== 'async') {
+    const { moduleRef } = value;
     value.value = type === 'class' ? new ref(moduleRef) : ref(moduleRef);
   } else {
     // handle async
