@@ -1,6 +1,6 @@
 # moqule
 
-A simple and minimal module system.
+A simple and minimal modularity system.
 
 ```javascript
 import moqule from 'moqule';

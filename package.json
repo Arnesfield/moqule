@@ -1,7 +1,7 @@
 {
   "name": "moqule",
   "version": "0.0.1-alpha.1",
-  "description": "A simple and minimal module system.",
+  "description": "A simple and minimal modularity system.",
   "homepage": "https://github.com/Arnesfield/moqule#readme",
   "bugs": {
     "url": "https://github.com/Arnesfield/moqule/issues"
