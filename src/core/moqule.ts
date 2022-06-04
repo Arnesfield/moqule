@@ -1,7 +1,6 @@
-import { compile, CompileResult } from '../compiler';
-import { resolveComponent } from '../module';
+import { resolve as resolveModule } from '../module';
 import { Module, ModuleMetadata } from '../types';
-import { createProperties } from '../utils';
+import { defineProperties } from '../utils';
 
 /**
  * Create module metadata.
@@ -90,39 +89,16 @@ export function moqule<T = unknown>(
     return { options, module };
   };
 
-  const resolveComponents = async (components: CompileResult['components']) => {
-    const resolveSync = () => {
-      for (const component of components.sync) {
-        resolveComponent(component);
-      }
-    };
-    if (components.async.length === 0) {
-      resolveSync();
-      return;
-    }
-    const promises = components.async.map(component => {
-      resolveComponent(component);
-      return component.asyncValue;
-    });
-    await Promise.all(promises);
-    resolveSync();
+  const resolve: Module<T>['resolve'] = async (options: T) => {
+    const { moduleRef, components } = resolveModule(module.register(options));
+    await components;
+    return moduleRef;
   };
 
-  const resolve: Module<T>['resolve'] = async options => {
-    const { compiled, components } = compile(module.register(options as T));
-    await resolveComponents(components);
-    return compiled.moduleRef;
+  const resolveSync: Module<T>['resolveSync'] = (options: T) => {
+    return resolveModule(module.register(options)).moduleRef;
   };
 
-  const resolveSync: Module<T>['resolveSync'] = options => {
-    const { compiled, components } = compile(module.register(options as T));
-    resolveComponents(components);
-    return compiled.moduleRef;
-  };
-
-  Object.defineProperties(
-    module,
-    createProperties({ name, metadata, register, resolve, resolveSync })
-  );
+  defineProperties(module, { name, metadata, register, resolve, resolveSync });
   return module;
 }

@@ -1,2 +1,3 @@
 export * from './compare';
-export * from './createProperties';
+export * from './defineProperties';
+export * from './isRegisteredModule';

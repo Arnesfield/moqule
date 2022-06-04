@@ -1,18 +1,18 @@
 import { ComponentId, ModuleRef } from '../types';
-import { compare, createProperties } from '../utils';
-import { resolveComponent, ResolvedComponent } from './resolveComponent';
+import { compare, defineProperties } from '../utils';
+import { ComponentRef } from './module.types';
 
-export interface ComponentList {
-  readonly exported: ResolvedComponent[];
-  readonly module: ResolvedComponent[];
-  readonly self: ResolvedComponent[];
-}
-
+/**
+ * Create a module reference.
+ * @param name The module name.
+ * @param components The module components (`ComponentList.module`).
+ * @returns The module reference.
+ */
 export function createModuleRef(
   name: string,
-  components: ComponentList
+  components: ComponentRef[]
 ): ModuleRef {
-  const moduleRef: ModuleRef = {} as ModuleRef;
+  const moduleRef = {} as ModuleRef;
 
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
     id: ComponentId
@@ -23,12 +23,10 @@ export function createModuleRef(
           'intentional, it might be caused by circular dependencies or imports.'
       );
     }
-    const component = components.module.find(
-      (component): component is ResolvedComponent<T> => {
-        return compare(id, component.ref);
-      }
+    const component = components.find(
+      (component): component is ComponentRef<T> => compare(id, component.ref)
     );
-    return component ? resolveComponent(component) : undefined;
+    return component?.value;
   };
 
   const get: ModuleRef['get'] = <T = unknown>(id: ComponentId<T>) => {
@@ -50,9 +48,6 @@ export function createModuleRef(
     return value;
   };
 
-  Object.defineProperties(
-    moduleRef,
-    createProperties({ name, get, getOptional })
-  );
+  defineProperties(moduleRef, { name, get, getOptional });
   return moduleRef;
 }
