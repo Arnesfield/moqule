@@ -98,6 +98,12 @@ export function compile<T = unknown>(
     // skip if in compiled modules
     const existingCompiled = findByModule(declaration);
     if (existingCompiled) {
+      if (isRegisteredModule(declaration)) {
+        throw new Error(
+          `Module "${existingCompiled.module.name}" is already ` +
+            'compiled and cannot be registered with options.'
+        );
+      }
       return existingCompiled;
     }
     // get module metadata
