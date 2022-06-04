@@ -74,13 +74,13 @@ export interface ModuleRef {
  */
 export interface RegisteredModule<T = unknown> {
   /**
-   * The register options.
-   */
-  readonly options: T;
-  /**
    * The registered module.
    */
   readonly module: Module<T>;
+  /**
+   * The register options.
+   */
+  readonly options: T;
 }
 
 /**

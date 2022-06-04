@@ -12,8 +12,6 @@ export function createModuleRef(
   name: string,
   components: ComponentRef[]
 ): ModuleRef {
-  const moduleRef = {} as ModuleRef;
-
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
     id: ComponentId
   ) => {
@@ -48,6 +46,5 @@ export function createModuleRef(
     return value;
   };
 
-  defineProperties(moduleRef, { name, get, getOptional });
-  return moduleRef;
+  return defineProperties({} as ModuleRef, { name, get, getOptional });
 }

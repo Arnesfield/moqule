@@ -71,32 +71,33 @@ export function moqule<T = unknown>(
   _metadata: CreateModuleMetadata<T> = {}
 ): Module<T> {
   const module = {} as Module<T>;
-  const opts: CreateModuleOptions<T> =
-    typeof _name === 'string' ? { name: _name, metadata: _metadata } : _name;
-  const { name, register: requireOptions } = opts;
-  const getMetadata = opts.metadata as CreateModuleMetadata<T>;
+  const {
+    name,
+    register: requireOptions,
+    metadata: getMetadata
+  }: CreateModuleOptions<T> = typeof _name === 'string'
+    ? { name: _name, metadata: _metadata }
+    : _name;
 
-  const metadata: Module<T>['metadata'] = options => {
+  const metadata: Module<T>['metadata'] = (options: T) => {
     if (requireOptions && typeof options === 'undefined') {
-      throw new Error(`Module "${module.name}" requires register options.`);
+      throw new Error(`Module "${name}" requires register options.`);
     }
     return typeof getMetadata === 'function'
       ? getMetadata(options)
       : getMetadata;
   };
 
-  const register: Module<T>['register'] = options => {
-    return { options, module };
-  };
+  const register: Module<T>['register'] = options => ({ module, options });
 
   const resolve: Module<T>['resolve'] = async (options: T) => {
-    const { moduleRef, components } = resolveModule(module.register(options));
+    const { moduleRef, components } = resolveModule(register(options));
     await components;
     return moduleRef;
   };
 
   const resolveSync: Module<T>['resolveSync'] = (options: T) => {
-    return resolveModule(module.register(options)).moduleRef;
+    return resolveModule(register(options)).moduleRef;
   };
 
   defineProperties(module, { name, metadata, register, resolve, resolveSync });
