@@ -41,14 +41,14 @@ const moqule = function <T = unknown>(module: Module<T>, options?: T) {
   return resolve(register(module, options)).moduleRef;
 } as Moqule;
 
-const async: Moqule['async'] = async function <T = unknown>(
+async function async<T = unknown>(
   module: Module<T>,
   options?: T
-) {
+): Promise<ModuleRef> {
   const { moduleRef, components } = resolve(register(module, options));
   await components;
   return moduleRef;
-};
+}
 
 defineProperties(moqule, { async });
 

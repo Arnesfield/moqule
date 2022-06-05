@@ -1,8 +1,8 @@
 import { ModuleRef, RegisteredModule } from '../types';
+import { ModuleInstance } from '../types/instance.types';
 import { compile } from './compile';
 import { resolveComponents } from './component';
 import { inject } from './inject';
-import { ModuleInstance } from './module.types';
 
 export interface ResolveResult {
   readonly moduleRef: ModuleRef;

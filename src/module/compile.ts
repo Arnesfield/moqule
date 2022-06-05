@@ -5,10 +5,14 @@ import {
   Module,
   RegisteredModule
 } from '../types';
+import {
+  ComponentList,
+  ComponentRef,
+  ModuleInstance
+} from '../types/instance.types';
 import { compare, isRegisteredModule } from '../utils';
 import { getMetadata } from './metadata';
-import { ComponentList, ComponentRef, ModuleInstance } from './module.types';
-import { createModuleRef } from './moduleRef';
+import { createModuleRef } from './module-ref';
 
 function createInstance<T = unknown>(
   module: Module<T>,

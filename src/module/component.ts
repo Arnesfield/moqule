@@ -1,5 +1,6 @@
-import { ComponentRef, ModuleInstance } from './module.types';
+import { ComponentRef, ModuleInstance } from '../types/instance.types';
 
+// TODO: remove moduleRef from ComponentRef
 function resolveComponent<T = unknown>(value: ComponentRef<T>): T {
   const { ref, type } = value;
   if (type !== 'async') {

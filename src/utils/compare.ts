@@ -1,5 +1,11 @@
 import { ComponentId, Module } from '../types';
 
+/**
+ * Compare module, component, or name.
+ * @param a Module, component, or name.
+ * @param b Module, component, or name.
+ * @returns Boolean which determines if `a` and `b` matches.
+ */
 export function compare(
   a: Module | ComponentId,
   b: Module | ComponentId

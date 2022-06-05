@@ -1,6 +1,6 @@
 import { ComponentId, Module } from '../types';
+import { ComponentRef, ModuleInstance } from '../types/instance.types';
 import { compare, isRegisteredModule } from '../utils';
-import { ComponentRef, ModuleInstance } from './module.types';
 
 type ModuleOrComponent<T = unknown> =
   | { readonly type: 'module'; readonly value: ModuleInstance<T> }

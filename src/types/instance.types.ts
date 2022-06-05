@@ -1,14 +1,18 @@
 import {
   AsyncComponent,
   ClassComponent,
-  FunctionComponent,
-  Module,
-  ModuleMetadata,
-  ModuleRef
-} from '../types';
+  FunctionComponent
+} from './component.types';
+import { ModuleMetadata } from './metadata.types';
+import { ModuleRef } from './module-ref.types';
+import { Module } from './module.types';
 
 // NOTE: internal types
 
+/**
+ * Component reference.
+ * @template T The component value or instance type.
+ */
 export type ComponentRef<T = unknown> = {
   value?: T;
   asyncValue?: Promise<T>;
@@ -37,6 +41,10 @@ export interface ComponentList {
   readonly self: ComponentRef[];
 }
 
+/**
+ * Module instance.
+ * @template T The register options type.
+ */
 export interface ModuleInstance<T = unknown> {
   readonly module: Module<T>;
   readonly moduleRef: ModuleRef;

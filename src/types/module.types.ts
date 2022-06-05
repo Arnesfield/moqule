@@ -1,4 +1,4 @@
-import { ModuleMetadata } from './types';
+import { ModuleMetadata } from './metadata.types';
 
 /**
  * Base module properties.
@@ -28,4 +28,25 @@ export interface ModuleWithRegister<T = unknown> extends BaseModule {
    * @returns The module metadata.
    */
   register(options: T): ModuleMetadata;
+}
+
+/**
+ * Module declaration.
+ * @template T The register options type.
+ */
+export type Module<T = unknown> = ModuleWithMetadata | ModuleWithRegister<T>;
+
+/**
+ * Registered module.
+ * @template T The register options type.
+ */
+export interface RegisteredModule<T = unknown> {
+  /**
+   * The registered module.
+   */
+  readonly module: Module<T>;
+  /**
+   * The register options.
+   */
+  readonly options: T;
 }

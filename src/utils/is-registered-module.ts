@@ -7,7 +7,6 @@ export function isRegisteredModule<T = unknown>(
   return (
     value !== null &&
     typeof value === 'object' &&
-    typeof value.module === 'object' &&
-    typeof value.module.metadata === 'function'
+    typeof value.module === 'object'
   );
 }

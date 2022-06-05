@@ -1,6 +1,6 @@
 import { ComponentId, ModuleRef } from '../types';
+import { ComponentRef } from '../types/instance.types';
 import { compare, defineProperties } from '../utils';
-import { ComponentRef } from './module.types';
 
 /**
  * Create a module reference.
