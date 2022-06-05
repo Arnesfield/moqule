@@ -1,7 +1,6 @@
 import { resolve } from '../module';
 import { Module, ModuleRef } from '../types';
 import { defineProperties } from '../utils';
-import { register } from './register';
 
 /**
  * The `moqule` function.
@@ -38,14 +37,14 @@ export interface Moqule {
  * The `moqule` function.
  */
 const moqule = function <T = unknown>(module: Module<T>, options?: T) {
-  return resolve(register(module, options)).moduleRef;
+  return resolve(module, options).moduleRef;
 } as Moqule;
 
 async function async<T = unknown>(
   module: Module<T>,
   options?: T
 ): Promise<ModuleRef> {
-  const { moduleRef, components } = resolve(register(module, options));
+  const { moduleRef, components } = resolve(module, options);
   await components;
   return moduleRef;
 }
