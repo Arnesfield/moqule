@@ -1,6 +1,7 @@
 import { ComponentId, ModuleRef } from '../types';
 import { ComponentRef } from '../types/instance.types';
 import { compare, defineProperties } from '../utils';
+import { resolveComponent } from './component';
 
 /**
  * Create a module reference.
@@ -12,6 +13,8 @@ export function createModuleRef(
   name: string,
   components: ComponentRef[]
 ): ModuleRef {
+  const moduleRef = {} as ModuleRef;
+
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
     id: ComponentId<T>
   ) => {
@@ -21,8 +24,10 @@ export function createModuleRef(
           'intentional, it might be caused by circular dependencies or imports.'
       );
     }
-    const component = components.find(component => compare(id, component.ref));
-    return component?.value as Awaited<T> | undefined;
+    const component = components.find(
+      (component): component is ComponentRef<T> => compare(id, component.ref)
+    );
+    return component ? resolveComponent(component, moduleRef) : undefined;
   };
 
   const get: ModuleRef['get'] = <T = unknown>(id: ComponentId<T>) => {
@@ -47,5 +52,5 @@ export function createModuleRef(
     );
   };
 
-  return defineProperties({} as ModuleRef, { name, get, getOptional });
+  return defineProperties(moduleRef, { name, get, getOptional });
 }

@@ -15,6 +15,7 @@ import { Module } from './module.types';
  */
 export type ComponentRef<T = unknown> = {
   value?: T;
+  resolved?: boolean;
   asyncValue?: Promise<T>;
 } & (
   | { readonly type: 'class'; readonly ref: ClassComponent<T> }
