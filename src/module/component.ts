@@ -1,10 +1,12 @@
+import { ModuleRef } from '../types';
 import { ComponentRef, ModuleInstance } from '../types/instance.types';
 
-// TODO: remove moduleRef from ComponentRef
-function resolveComponent<T = unknown>(value: ComponentRef<T>): T {
+function resolveComponent<T = unknown>(
+  value: ComponentRef<T>,
+  moduleRef: ModuleRef
+): T {
   const { ref, type } = value;
   if (type !== 'async') {
-    const { moduleRef } = value;
     value.value = type === 'class' ? new ref(moduleRef) : ref(moduleRef);
   } else {
     // handle async
@@ -25,15 +27,15 @@ export async function resolveComponents(
   instances: ModuleInstance[]
 ): Promise<void> {
   // save async values to promises, sync components are resolved after
-  const sync: ComponentRef[] = [];
+  const sync: { component: ComponentRef; moduleRef: ModuleRef }[] = [];
   const promises: (Promise<unknown> | undefined)[] = [];
-  for (const instance of instances) {
-    for (const component of instance.components.self) {
+  for (const { components, moduleRef } of instances) {
+    for (const component of components.self) {
       if (component.type !== 'async') {
-        sync.push(component);
+        sync.push({ component, moduleRef });
         continue;
       }
-      resolveComponent(component);
+      resolveComponent(component, moduleRef);
       promises.push(component.asyncValue);
     }
   }
@@ -41,7 +43,7 @@ export async function resolveComponents(
   if (promises.length > 0) {
     await Promise.all(promises);
   }
-  for (const component of sync) {
-    resolveComponent(component);
+  for (const { component, moduleRef } of sync) {
+    resolveComponent(component, moduleRef);
   }
 }

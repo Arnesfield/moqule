@@ -17,16 +17,8 @@ export type ComponentRef<T = unknown> = {
   value?: T;
   asyncValue?: Promise<T>;
 } & (
-  | {
-      readonly type: 'class';
-      readonly moduleRef: ModuleRef;
-      readonly ref: ClassComponent<T>;
-    }
-  | {
-      readonly type: 'function';
-      readonly moduleRef: ModuleRef;
-      readonly ref: FunctionComponent<T>;
-    }
+  | { readonly type: 'class'; readonly ref: ClassComponent<T> }
+  | { readonly type: 'function'; readonly ref: FunctionComponent<T> }
   | { readonly type: 'async'; readonly ref: AsyncComponent<T> }
 );
 
