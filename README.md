@@ -25,68 +25,62 @@ Use the [UMD](https://github.com/umdjs/umd) build:
 ```
 
 ```javascript
-const appModule = window.moqule('AppModule', {});
+const moduleRef = window.moqule(AppModule, options?);
 ```
 
 ## Usage
 
 ### Module Declaration
 
-Create a module declaration using `moqule`.
+A module declaration is a simple object that contains the `name` of the module and its metadata.
 
-```javascript
-import moqule from 'moqule';
+```typescript
+import { Module } from 'moqule';
+
+const MyModule: Module = {
+  // required name
+  name: 'MyModule',
+  // metadata (all optional properties)
+  imports: [],
+  components: [],
+  exports: [],
+  provide: [],
+  inject: []
+};
 ```
 
-When you create a module, it only acts as a declaration and will not call or instantiate its components unless it is `resolved`.
+> **Tip**: Using [TypeScript](https://www.typescriptlang.org/), you can import `Module` from the package to include type checking for the module data.
 
-There are 4 ways to create a module.
+There will be cases where you would need to configure the module with custom options (or you want to wrap the metadata within a function). In that case, you can use the `register` property callback:
 
-1. Module metadata:
+```typescript
+type Options = {}; // module options type/interface
 
-   ```javascript
-   const myModule = moqule('MyModule', metadata);
-   ```
+const MyModule: Module<Options> = {
+  name: 'MyModule',
+  // register metadata (all optional properties)
+  register: (options: Options) => ({
+    imports: [],
+    components: [],
+    exports: [],
+    provide: [],
+    inject: []
+  })
+};
+```
 
-2. Callback that returns the module metadata:
+From there, you can register custom options later when importing the module.
 
-   ```typescript
-   const myModule = moqule<Options>(
-     'MyModule',
-     (options?: Options) => metadata
-   );
-   ```
-
-3. Module options object (optional register options):
-
-   ```typescript
-   const myModule = moqule<Options>({
-     name: 'MyModule',
-     register: false,
-     metadata: (options?: Options) => metadata
-   });
-   ```
-
-4. Module options object (required register options):
-
-   ```typescript
-   const myModule = moqule<Options>({
-     name: 'MyModule',
-     register: true,
-     metadata: (options: Options) => metadata
-   });
-   ```
-
-In order to register components to the module, you would need to set its metadata.
+For now, let's talk about the **module metadata**.
 
 ### Module Metadata
 
-The **module metadata** is an object that registers and/or provides components.
+The **module metadata** is an object that contains the information of the module and its components.
 
 ```typescript
 export interface ModuleMetadata {
   imports?: (Module | RegisteredModule)[];
-  components?: ClassComponent[] | ModuleComponents;
+  components?: ClassComponent[] | Components;
   exports?: (Module | ComponentId)[];
   provide?: (Module | ComponentId)[];
   inject?: boolean | ComponentId[];
@@ -96,7 +90,7 @@ export interface ModuleMetadata {
 The metadata is stored within the module declaration.
 
 - `imports` - Import other modules to the module. The module will gain access to the exported components of the imported modules.
-- `components` - Components to call or instantiate when the module declaration is resolved. Can be an array of `ClassComponent`s or a `ModuleComponents` object with the following properties:
+- `components` - Components to call or instantiate when the module declaration is resolved. Can be an array of `ClassComponent`s or a `Components` object with the following properties:
   - `class` - Class components array to register to the module.
   - `function` - Function components array to register to the module.
   - `async` - Async function components array to register to the module.
@@ -112,21 +106,31 @@ These properties can be dynamic or changed through **register options** or **fac
 
 ### Resolve Module Declaration
 
-Start calling/instantiating the module declaration's components by resolving the module.
-
-Resolve asynchronously with `module.resolve(options?)`. This will wait for async components to load first before resolving the promise.
+Start calling/instantiating the module declaration's components by resolving the module using the `moqule` function.
 
 ```javascript
-const moduleRef = await myModule.resolve();
+import moqule from 'moqule';
 ```
 
-Resolve synchronously with `module.resolveSync(options?)`. This will immediately return the **module reference** and async components will load asynchronously.
+You can either resolve the module synchronously or asynchronously depending on whether your module includes async components or not.
 
-```javascript
-const moduleRef = myModule.resolveSync();
-```
+- Resolve synchronously with `moqule(module, options?)`:
 
-> **Tip**: Depending on your use case, you can resolve the same module more than once. This will call or instantiate its components again that is accessible to its **module reference**.
+  ```javascript
+  const moduleRef = moqule(MyModule);
+  ```
+
+  This will immediately return the **module reference** and async components will load asynchronously.
+
+- Resolve asynchronously with `moqule.async(module, options?)`:
+
+  ```javascript
+  const moduleRef = await moqule.async(MyModule);
+  ```
+
+  This will wait for async components to load first before resolving the promise.
+
+Depending on your use case, you can resolve the same module more than once. This will call or instantiate its components again that is accessible to the **module reference** that it returns.
 
 ### Module Reference
 
@@ -139,27 +143,28 @@ const moduleRef = myModule.resolveSync();
 ## Basic Example
 
 ```typescript
-import moqule from 'moqule';
+import moqule, { Module, ModuleRef } from 'moqule';
 
 class HelloService {
-  constructor(private moduleRef) {}
+  constructor(private moduleRef: ModuleRef) {}
   hello() {
     console.log('[%s] Hello World!', this.moduleRef.name);
   }
 }
 
-const app = moqule('AppModule', {
+const AppModule: Module = {
+  name: 'AppModule',
   components: [HelloService]
-});
+};
 
-const moduleRef = app.resolveSync();
+const moduleRef = moqule(AppModule);
 const helloService = moduleRef.get(HelloService);
 helloService.hello();
 ```
 
 Output:
 
-```
+```text
 [AppModule] Hello World!
 ```
 
