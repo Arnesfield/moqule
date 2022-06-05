@@ -19,6 +19,19 @@ function resolveComponent<T = unknown>(
   return value.value as T;
 }
 
+function iterate(instances: ModuleInstance[], async: boolean) {
+  const promises: (Promise<unknown> | undefined)[] = [];
+  for (const { components, moduleRef } of instances) {
+    for (const component of components.self) {
+      if (async === (component.type === 'async')) {
+        resolveComponent(component, moduleRef);
+        async && promises.push(component.asyncValue);
+      }
+    }
+  }
+  return promises;
+}
+
 /**
  * Go through and resolve the components of module instances.
  * @param instances The module instances.
@@ -26,24 +39,10 @@ function resolveComponent<T = unknown>(
 export async function resolveComponents(
   instances: ModuleInstance[]
 ): Promise<void> {
-  // save async values to promises, sync components are resolved after
-  const sync: { component: ComponentRef; moduleRef: ModuleRef }[] = [];
-  const promises: (Promise<unknown> | undefined)[] = [];
-  for (const { components, moduleRef } of instances) {
-    for (const component of components.self) {
-      if (component.type !== 'async') {
-        sync.push({ component, moduleRef });
-        continue;
-      }
-      resolveComponent(component, moduleRef);
-      promises.push(component.asyncValue);
-    }
-  }
-  // make sure to await only if there are promises to resolve
+  // resolve async components first if any
+  const promises = iterate(instances, true);
   if (promises.length > 0) {
     await Promise.all(promises);
   }
-  for (const { component, moduleRef } of sync) {
-    resolveComponent(component, moduleRef);
-  }
+  iterate(instances, false);
 }
