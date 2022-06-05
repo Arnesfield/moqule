@@ -1,3 +1,5 @@
+import { ModuleWithMetadata, ModuleWithRegister } from './internal.types';
+
 /**
  * Class component.
  * @template T The component value or instance type.
@@ -87,44 +89,7 @@ export interface RegisteredModule<T = unknown> {
  * Module declaration.
  * @template T The register options type.
  */
-export interface Module<T = unknown> {
-  /**
-   * The module name.
-   */
-  readonly name: string;
-  /**
-   * Get the module metadata.
-   * @param options The register options.
-   * @returns The module metadata.
-   */
-  metadata(options?: T): ModuleMetadata;
-  /**
-   * Set options to register for module.
-   * @param options The register options.
-   * @returns The registered module.
-   */
-  register(options: T): RegisteredModule<T>;
-  /**
-   * Resolve all modules and components.
-   *
-   * All async components are resolved before the promise is fulfilled.
-   *
-   * You may use `resolveSync(options)` if no module is using async components.
-   * @param options The register options.
-   * @returns The module reference.
-   */
-  resolve(options?: T): Promise<ModuleRef>;
-  /**
-   * Resolve all modules and components.
-   *
-   * All async components are resolved asynchronously.
-   *
-   * You may use `resolve(options)` if at least one module is using async components.
-   * @param options The register options.
-   * @returns The module reference.
-   */
-  resolveSync(options?: T): ModuleRef;
-}
+export type Module<T = unknown> = ModuleWithMetadata | ModuleWithRegister<T>;
 
 /**
  * Module components.

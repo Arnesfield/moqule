@@ -1,3 +1,4 @@
+import { register } from '../core/register';
 import {
   AsyncComponent,
   ComponentId,
@@ -5,6 +6,7 @@ import {
   RegisteredModule
 } from '../types';
 import { compare, isRegisteredModule } from '../utils';
+import { getMetadata } from './metadata';
 import { ComponentList, ComponentRef, ModuleInstance } from './module.types';
 import { createModuleRef } from './moduleRef';
 
@@ -12,7 +14,7 @@ function createInstance<T = unknown>(
   module: Module<T>,
   options: T | undefined
 ): ModuleInstance<T> {
-  const metadata = module.metadata(options);
+  const metadata = getMetadata(module, options);
   const components: ComponentList = { exported: [], module: [], self: [] };
   const moduleRef = createModuleRef(module.name, components.module);
   return { module, moduleRef, metadata, components, descendants: [] };
@@ -85,7 +87,7 @@ export function compile<T = unknown>(
   const isRegistered = isRegisteredModule(declaration);
   const { module, options } = isRegistered
     ? declaration
-    : declaration.register(undefined as unknown as T);
+    : register(declaration, undefined);
   // skip if already compiled
   const existingInstance = instances.find(
     (instance): instance is ModuleInstance<T> => instance.module === module
