@@ -24,8 +24,8 @@ function createInstance<T = unknown>(
   return { module, moduleRef, metadata, components, descendants: [] };
 }
 
-// resolve registered components of self
-function resolveComponents(instance: ModuleInstance): void {
+// setup registered components of self
+function setupComponents(instance: ModuleInstance): void {
   const { components, metadata } = instance;
   // only export non-modules
   const exports = (metadata.exports || []).filter(
@@ -100,7 +100,7 @@ export function compile<T = unknown>(
     }
     // make sure consumer cannot register more than once
     throw new Error(
-      `Module "${module.name}" is already compiled and cannot be registered with options.`
+      `Module "${module.name}" was already compiled and cannot be registered with options.`
     );
   }
 
@@ -108,7 +108,7 @@ export function compile<T = unknown>(
   const instance = createInstance(module, options);
   instances.push(instance);
   // handle components and submodules
-  resolveComponents(instance);
+  setupComponents(instance);
   // compile all imported modules and get components
   // also save its descendants for injection later
   const descendants: ModuleInstance[] = [];

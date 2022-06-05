@@ -1,7 +1,7 @@
 import { Module, ModuleMetadata } from '../types';
 import { ModuleWithMetadata } from '../types/module.types';
 
-function isModuleWithMetadata(module: any): module is ModuleWithMetadata {
+function isMetadata(module: any): module is ModuleWithMetadata {
   return typeof module.register !== 'function';
 }
 
@@ -15,12 +15,10 @@ export function getMetadata<T = unknown>(
   module: Module<T>,
   options: T
 ): ModuleMetadata {
-  if (isModuleWithMetadata(module)) {
+  if (isMetadata(module)) {
     return module;
+  } else if (module.register.length > 0 && typeof options === 'undefined') {
+    throw new Error(`Module "${module.name}" requires register options.`);
   }
-  const { name, register } = module;
-  if (register.length > 0 && typeof options === 'undefined') {
-    throw new Error(`Module "${name}" requires register options.`);
-  }
-  return register(options);
+  return module.register(options);
 }
