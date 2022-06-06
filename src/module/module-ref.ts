@@ -13,8 +13,6 @@ export function createModuleRef(
   name: string,
   components: ComponentRef[]
 ): ModuleRef {
-  const moduleRef = {} as ModuleRef;
-
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
     id: ComponentId<T>
   ) => {
@@ -27,7 +25,7 @@ export function createModuleRef(
     const component = components.find(
       (component): component is ComponentRef<T> => compare(id, component.ref)
     );
-    return component ? resolveComponent(component, moduleRef) : undefined;
+    return component ? resolveComponent(component) : undefined;
   };
 
   const get: ModuleRef['get'] = <T = unknown>(id: ComponentId<T>) => {
@@ -52,5 +50,5 @@ export function createModuleRef(
     );
   };
 
-  return defineProperties(moduleRef, { name, get, getOptional });
+  return defineProperties({} as ModuleRef, { name, get, getOptional });
 }

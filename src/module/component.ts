@@ -1,22 +1,22 @@
-import { ModuleRef } from '../types';
 import { ComponentRef, ModuleInstance } from '../types/instance.types';
 
 /**
  * Resolve the component value.
  * @param component The component reference.
- * @param moduleRef The module reference.
  * @returns The component value.
  */
 export function resolveComponent<T = unknown>(
-  component: ComponentRef<T>,
-  moduleRef: ModuleRef
+  component: ComponentRef<T>
 ): Awaited<T> {
   if (component.resolved) {
+    // TODO: handle possible undefined due to circular dependencies
     return component.value as Awaited<T>;
   }
   component.resolved = true;
   const { ref, type } = component;
   if (type !== 'async') {
+    const { moduleRef } = component;
+    // TODO: value not set until after call
     component.value = type === 'class' ? new ref(moduleRef) : ref(moduleRef);
   } else {
     // handle async
@@ -31,10 +31,10 @@ export function resolveComponent<T = unknown>(
 
 function iterate(instances: ModuleInstance[], async: boolean) {
   const promises: (Promise<unknown> | undefined)[] = [];
-  for (const { components, moduleRef } of instances) {
+  for (const { components } of instances) {
     for (const component of components.self) {
       if (async === (component.type === 'async')) {
-        resolveComponent(component, moduleRef);
+        resolveComponent(component);
         async && promises.push(component.asyncValue);
       }
     }

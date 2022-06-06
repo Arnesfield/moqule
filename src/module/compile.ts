@@ -46,7 +46,7 @@ function setupComponents(instance: ModuleInstance): void {
     : metadata.components || {};
   const { moduleRef } = instance;
   for (const ref of moduleComponents.class || []) {
-    saveComponent({ type: 'class', ref });
+    saveComponent({ type: 'class', moduleRef, ref });
   }
   for (const type of ['function', 'async'] as const) {
     for (const value of moduleComponents[type] || []) {
@@ -55,7 +55,9 @@ function setupComponents(instance: ModuleInstance): void {
         // cast as AsyncComponent so it works for both cases
         const ref = obj[name] as AsyncComponent | undefined;
         if (typeof ref === 'function') {
-          saveComponent({ type, ref });
+          saveComponent(
+            type === 'async' ? { type, ref } : { type, moduleRef, ref }
+          );
         }
       }
     }
