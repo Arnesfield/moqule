@@ -3,6 +3,7 @@ import {
   AsyncComponent,
   ComponentId,
   Module,
+  ModuleRef,
   RegisteredModule
 } from '../types';
 import {
@@ -16,20 +17,13 @@ import { createModuleRef } from './module-ref';
 
 function createInstance<T = unknown>(
   module: Module<T>,
-  options: T | undefined
+  options: T | undefined,
+  onInit: ModuleRef['onInit']
 ): ModuleInstance<T> {
   const metadata = getMetadata(module, options);
   const components: ComponentList = { exported: [], module: [], self: [] };
-  const listeners: (() => void)[] = [];
-  const moduleRef = createModuleRef(module.name, components.module, listeners);
-  return {
-    module,
-    moduleRef,
-    metadata,
-    components,
-    listeners,
-    descendants: []
-  };
+  const moduleRef = createModuleRef(module.name, components.module, onInit);
+  return { module, moduleRef, metadata, components, descendants: [] };
 }
 
 // setup registered components of self
@@ -90,11 +84,13 @@ function setupComponents(instance: ModuleInstance): void {
  * Compile and resolve the components of the module declaration and its submodules.
  * @param declaration The module declaration.
  * @param instances The module instances. Created instances are pushed to this array.
+ * @param onInit Callback to add module init listeners.
  * @returns The created module instance.
  */
 export function compile<T = unknown>(
   declaration: Module<T> | RegisteredModule<T>,
-  instances: ModuleInstance[]
+  instances: ModuleInstance[],
+  onInit: ModuleRef['onInit']
 ): ModuleInstance<T> {
   const isRegistered = isRegisteredModule(declaration);
   const { module, options } = isRegistered
@@ -115,7 +111,7 @@ export function compile<T = unknown>(
   }
 
   // create module instance
-  const instance = createInstance(module, options);
+  const instance = createInstance(module, options, onInit);
   instances.push(instance);
   // handle components and submodules
   setupComponents(instance);
@@ -124,7 +120,7 @@ export function compile<T = unknown>(
   const descendants: ModuleInstance[] = [];
   const { exports = [], imports = [] } = instance.metadata;
   for (const imported of imports) {
-    const compiled = compile(imported, instances);
+    const compiled = compile(imported, instances, onInit);
     descendants.push(compiled, ...compiled.descendants);
     const shouldExport = exports.some(value => {
       return (

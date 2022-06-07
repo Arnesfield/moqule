@@ -7,12 +7,13 @@ import { resolveComponent } from './component';
  * Create a module reference.
  * @param name The module name.
  * @param components The module components (`ComponentList.module`).
+ * @param onInit Callback to add module init listeners.
  * @returns The module reference.
  */
 export function createModuleRef(
   name: string,
   components: ComponentRef[],
-  listeners: (() => void)[]
+  onInit: ModuleRef['onInit']
 ): ModuleRef {
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
     id: ComponentId<T>
@@ -49,10 +50,6 @@ export function createModuleRef(
         ' - If async components were registered, make sure to use ' +
         '`moqule.async(module)` instead.'
     );
-  };
-
-  const onInit: ModuleRef['onInit'] = callback => {
-    listeners.push(callback);
   };
 
   return defineProperties({} as ModuleRef, { name, get, getOptional, onInit });

@@ -44,9 +44,9 @@ async function async<T = unknown>(
   module: Module<T>,
   options?: T
 ): Promise<ModuleRef> {
-  const { moduleRef, components } = initialize(module, options);
-  await components;
-  return moduleRef;
+  const init = initialize(module, options);
+  await init.components;
+  return init.moduleRef;
 }
 
 defineProperties(moqule, { async });

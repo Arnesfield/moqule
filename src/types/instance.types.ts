@@ -52,5 +52,4 @@ export interface ModuleInstance<T = unknown> {
   readonly metadata: ModuleMetadata;
   readonly components: ComponentList;
   readonly descendants: ModuleInstance[];
-  readonly listeners: (() => void)[];
 }

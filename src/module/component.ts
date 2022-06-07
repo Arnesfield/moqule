@@ -47,9 +47,11 @@ function iterate(instances: ModuleInstance[], async: boolean) {
 /**
  * Go through and resolve the components of module instances.
  * @param instances The module instances.
+ * @param callback Run callback after resolving sync components.
  */
 export async function resolveComponents(
-  instances: ModuleInstance[]
+  instances: ModuleInstance[],
+  callback: () => void
 ): Promise<void> {
   // resolve async components first if any
   const promises = iterate(instances, true);
@@ -57,12 +59,5 @@ export async function resolveComponents(
     await Promise.all(promises);
   }
   iterate(instances, false);
-  // emit listeners
-  for (const { listeners } of instances) {
-    for (const listener of listeners) {
-      listener();
-    }
-    // cleanup
-    listeners.splice(0);
-  }
+  callback();
 }
