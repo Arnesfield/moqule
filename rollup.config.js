@@ -4,7 +4,6 @@ import esbuild from 'rollup-plugin-esbuild';
 import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
 
-const isProduction = process.env.NODE_ENV === 'production';
 const name = pkg.name.slice(pkg.name.lastIndexOf('/') + 1);
 const input = 'src/index.ts';
 const inputUmd = 'src/index.umd.ts';
@@ -21,7 +20,7 @@ function umd(options) {
   };
 }
 
-export default [
+export default args => [
   {
     input,
     output: [
@@ -45,7 +44,7 @@ export default [
   // type checking only
   {
     input,
-    output: isProduction ? { file: '/dev/null' } : undefined,
+    output: !args.watch ? { file: '/dev/null' } : undefined,
     plugins: [typescript({ noEmit: true, sourceMap: false })],
     watch: { skipWrite: true }
   }
