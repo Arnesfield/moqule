@@ -5,7 +5,7 @@ import { compile } from './compile';
 import { resolveComponents } from './component';
 import { inject } from './inject';
 
-export interface ResolveResult {
+export interface InitializeResult {
   readonly moduleRef: ModuleRef;
   readonly components: Promise<void>;
 }
@@ -17,10 +17,10 @@ export interface ResolveResult {
  * @param options The register options.
  * @returns The module reference and all available components.
  */
-export function resolve<T = unknown>(
+export function initialize<T = unknown>(
   module: Module<T>,
   options: T
-): ResolveResult {
+): InitializeResult {
   // compile and inject provided components
   const instances: ModuleInstance[] = [];
   const { moduleRef } = compile(register(module, options), instances);

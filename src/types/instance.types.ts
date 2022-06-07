@@ -33,7 +33,7 @@ export type ComponentRef<T = unknown> = {
 
 /**
  * Component list. Should be eligible for garbage collection
- * once the module is resolved except for the `module`
+ * once the module is initialized except for the `module`
  * property array as it is used by the module reference.
  */
 export interface ComponentList {

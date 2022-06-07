@@ -1,4 +1,4 @@
-import { resolve } from '../module';
+import { initialize } from '../module';
 import { Module, ModuleRef } from '../types';
 import { defineProperties } from '../utils';
 
@@ -7,7 +7,7 @@ import { defineProperties } from '../utils';
  */
 export interface Moqule {
   /**
-   * Resolve all modules and components.
+   * Initialize all modules and components.
    *
    * All async components are resolved asynchronously.
    *
@@ -20,7 +20,7 @@ export interface Moqule {
    */
   <T = unknown>(module: Module<T>, options?: T): ModuleRef;
   /**
-   * Resolve all modules and components.
+   * Initialize all modules and components.
    *
    * All async components are resolved before the promise is fulfilled.
    *
@@ -37,14 +37,14 @@ export interface Moqule {
  * The `moqule` function.
  */
 const moqule = function <T = unknown>(module: Module<T>, options?: T) {
-  return resolve(module, options).moduleRef;
+  return initialize(module, options).moduleRef;
 } as Moqule;
 
 async function async<T = unknown>(
   module: Module<T>,
   options?: T
 ): Promise<ModuleRef> {
-  const { moduleRef, components } = resolve(module, options);
+  const { moduleRef, components } = initialize(module, options);
   await components;
   return moduleRef;
 }
