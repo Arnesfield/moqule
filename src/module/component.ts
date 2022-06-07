@@ -1,3 +1,4 @@
+import { ForwardRef } from '../types';
 import { ComponentRef, ModuleInstance } from '../types/instance.types';
 
 /**
@@ -9,15 +10,16 @@ export function resolveComponent<T = unknown>(
   component: ComponentRef<T>
 ): Awaited<T> {
   if (component.resolved) {
-    // TODO: handle possible undefined due to circular dependencies
     return component.value as Awaited<T>;
   }
   component.resolved = true;
   const { ref, type } = component;
   if (type !== 'async') {
-    const { moduleRef } = component;
-    // TODO: value not set until after call
-    component.value = type === 'class' ? new ref(moduleRef) : ref(moduleRef);
+    const forwardRef: ForwardRef<T> = value => {
+      component.value = value;
+      return component.moduleRef;
+    };
+    component.value = type === 'class' ? new ref(forwardRef) : ref(forwardRef);
   } else {
     // handle async
     const promise = (component.asyncValue = Promise.resolve(ref()));

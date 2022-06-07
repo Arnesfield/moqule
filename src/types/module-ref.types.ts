@@ -1,5 +1,6 @@
 import { ComponentId } from './component.types';
 
+// TODO: implement on init listeners
 /**
  * Module reference.
  */
