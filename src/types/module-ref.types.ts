@@ -1,6 +1,5 @@
 import { ComponentId } from './component.types';
 
-// TODO: implement on init listeners
 /**
  * Module reference.
  */
@@ -21,4 +20,9 @@ export interface ModuleRef {
    * @returns The component if found.
    */
   getOptional<T = unknown>(id: ComponentId<T>): Awaited<T> | undefined;
+  /**
+   * Set event listener that triggers when module is initialized.
+   * @param listener The listener.
+   */
+  onInit(listener: () => void): void;
 }

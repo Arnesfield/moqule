@@ -20,8 +20,16 @@ function createInstance<T = unknown>(
 ): ModuleInstance<T> {
   const metadata = getMetadata(module, options);
   const components: ComponentList = { exported: [], module: [], self: [] };
-  const moduleRef = createModuleRef(module.name, components.module);
-  return { module, moduleRef, metadata, components, descendants: [] };
+  const listeners: (() => void)[] = [];
+  const moduleRef = createModuleRef(module.name, components.module, listeners);
+  return {
+    module,
+    moduleRef,
+    metadata,
+    components,
+    listeners,
+    descendants: []
+  };
 }
 
 // setup registered components of self

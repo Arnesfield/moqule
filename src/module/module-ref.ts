@@ -11,7 +11,8 @@ import { resolveComponent } from './component';
  */
 export function createModuleRef(
   name: string,
-  components: ComponentRef[]
+  components: ComponentRef[],
+  listeners: (() => void)[]
 ): ModuleRef {
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
     id: ComponentId<T>
@@ -50,5 +51,9 @@ export function createModuleRef(
     );
   };
 
-  return defineProperties({} as ModuleRef, { name, get, getOptional });
+  const onInit: ModuleRef['onInit'] = callback => {
+    listeners.push(callback);
+  };
+
+  return defineProperties({} as ModuleRef, { name, get, getOptional, onInit });
 }

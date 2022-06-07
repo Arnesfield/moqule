@@ -57,4 +57,12 @@ export async function resolveComponents(
     await Promise.all(promises);
   }
   iterate(instances, false);
+  // emit listeners
+  for (const { listeners } of instances) {
+    for (const listener of listeners) {
+      listener();
+    }
+    // cleanup
+    listeners.splice(0);
+  }
 }
