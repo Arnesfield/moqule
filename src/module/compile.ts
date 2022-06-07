@@ -1,7 +1,7 @@
 import { register } from '../core/register';
 import {
   AsyncComponent,
-  ComponentId,
+  Component,
   Module,
   ModuleRef,
   RegisteredModule
@@ -31,7 +31,7 @@ function setupComponents(instance: ModuleInstance): void {
   const { components, metadata } = instance;
   // only export non-modules
   const exports = (metadata.exports || []).filter(
-    (id): id is ComponentId => typeof id !== 'object'
+    (id): id is string | Component => typeof id !== 'object'
   );
   const saveComponent = (component: ComponentRef) => {
     components.self.push(component);

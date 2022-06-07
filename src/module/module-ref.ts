@@ -1,4 +1,4 @@
-import { ComponentId, ModuleRef } from '../types';
+import { Component, ModuleRef } from '../types';
 import { ComponentRef } from '../types/instance.types';
 import { compare, defineProperties } from '../utils';
 import { resolveComponent } from './component';
@@ -16,7 +16,7 @@ export function createModuleRef(
   onInit: ModuleRef['onInit']
 ): ModuleRef {
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
-    id: ComponentId<T>
+    id: string | Component<T>
   ) => {
     if (typeof id === 'undefined') {
       throw new Error(
@@ -30,7 +30,7 @@ export function createModuleRef(
     return component ? resolveComponent(component) : undefined;
   };
 
-  const get: ModuleRef['get'] = <T = unknown>(id: ComponentId<T>) => {
+  const get: ModuleRef['get'] = <T = unknown>(id: string | Component<T>) => {
     const value = getOptional<T>(id);
     if (typeof value !== 'undefined') {
       return value;

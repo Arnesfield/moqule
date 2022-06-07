@@ -1,4 +1,4 @@
-import { ComponentId, Module } from '../types';
+import { Component, Module } from '../types';
 
 /**
  * Compare module, component, or name.
@@ -7,8 +7,8 @@ import { ComponentId, Module } from '../types';
  * @returns Boolean which determines if `a` and `b` matches.
  */
 export function compare(
-  a: Module | ComponentId,
-  b: Module | ComponentId
+  a: string | Module | Component,
+  b: string | Module | Component
 ): boolean {
   if (typeof a === typeof b) {
     return a === b;

@@ -1,7 +1,7 @@
 import {
   AsyncComponent,
   ClassComponent,
-  ComponentId,
+  Component,
   FunctionComponent
 } from './component.types';
 import { Module, RegisteredModule } from './module.types';
@@ -39,14 +39,14 @@ export interface ModuleMetadata {
   /**
    * Modules, components, or name strings to export.
    */
-  exports?: (Module | ComponentId)[];
+  exports?: (string | Module | Component)[];
   /**
    * Components, submodule components, or name strings to provide for submodules.
    */
-  provide?: (Module | ComponentId)[];
+  provide?: (string | Module | Component)[];
   /**
    * Accept provided components from ancestor modules.
    * Set to `true` to inject all provided components.
    */
-  inject?: boolean | ComponentId[];
+  inject?: boolean | (string | Component)[];
 }

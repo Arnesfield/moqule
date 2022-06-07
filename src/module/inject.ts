@@ -1,4 +1,4 @@
-import { ComponentId, Module } from '../types';
+import { Component, Module } from '../types';
 import { ComponentRef, ModuleInstance } from '../types/instance.types';
 import { compare, isRegisteredModule } from '../utils';
 
@@ -8,7 +8,7 @@ type ModuleOrComponent<T = unknown> =
 
 function findModuleOrComponent(
   instance: ModuleInstance,
-  match: Module | ComponentId,
+  match: string | Module | Component,
   instances: ModuleInstance[]
 ): ModuleOrComponent | undefined {
   // match component id

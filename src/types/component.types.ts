@@ -37,11 +37,10 @@ export type FunctionComponent<T = unknown> = (forwardRef: ForwardRef<T>) => T;
 export type AsyncComponent<T = unknown> = () => Promise<T>;
 
 /**
- * Component class, function, async function, or name.
+ * Component class, function, or async function.
  * @template T The component value or instance type.
  */
-export type ComponentId<T = unknown> =
-  | string
+export type Component<T = unknown> =
   | ClassComponent<T>
   | FunctionComponent<T>
   | AsyncComponent<T>;
