@@ -13,23 +13,27 @@
   "license": "MIT",
   "author": "Jefferson Rylee <rylee.jeff385@gmail.com>",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     "import": "./lib/index.mjs",
     "require": "./lib/index.cjs",
     "default": "./lib/index.mjs"
   },
   "main": "lib/index.cjs",
+  "jsdelivr": "lib/index.umd.min.js",
+  "unpkg": "lib/index.umd.min.js",
   "module": "lib/index.mjs",
-  "browser": "lib/index.umd.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib"
   ],
   "scripts": {
-    "prebuild": "rimraf lib",
+    "prebuild": "npm run clean",
     "build": "rollup -c",
+    "clean": "rimraf lib",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
+    "prestart": "npm run clean",
     "start": "rollup -cw",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
