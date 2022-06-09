@@ -435,9 +435,100 @@ It is up to you how you want to setup and register your components. It is also u
 
 ### Module Reference
 
-> A **work in progress**.
+The **module reference** is an object that has a reference to the components of a module declaration.
 
-### Resolve Module Declaration
+Consider the following module:
+
+```javascript
+const AppModule = {
+  name: 'AppModule',
+  imports: [MyModule],
+  components: [AppService, OtherService]
+};
+```
+
+The module reference for the `AppModule` will be able to reference the `AppService` and `OtherService` components, as well as the exported components of `MyModule`.
+
+```typescript
+interface ModuleRef {
+  name: string;
+  get<T = unknown>(id: string | Component<T>): Awaited<T>;
+  getOptional<T = unknown>(id: string | Component<T>): Awaited<T> | undefined;
+  onInit(listener: () => void): void;
+}
+```
+
+It is mainly used within the components (the return value of the `FowardRef` function).
+
+- `name`
+
+  This pertains to the module name. In our example module above, the name is `'AppModule'`.
+
+- `get(id)`
+
+  The `get` method is used to get the component value that is accessible to the module.
+
+  ```typescript
+  class AppService {
+    constructor(forward: ForwardRef<AppService>) {
+      const moduleRef = forward(this);
+      const otherService = moduleRef.get(OtherService);
+    }
+  }
+  ```
+
+  You can also use the name strings:
+
+  ```typescript
+  class AppService {
+    constructor(forward: ForwardRef<AppService>) {
+      const moduleRef = forward(this);
+      const otherService = moduleRef.get<OtherService>('OtherService');
+    }
+  }
+  ```
+
+  If the component is not found within the module (or it is `undefined`), an error is thrown. If the component is intended to be optional, you can use `moduleRef.getOptional(id)` instead.
+
+- `getOptional(id)`
+
+  The `getOptional` method has same usage as `get`. The only difference is that it will not throw an error if the component was not found or `undefined`.
+
+  ```javascript
+  class AppService {
+    constructor(forward) {
+      const moduleRef = forward(this);
+      // "otherService" type is `OtherService | undefined`
+      const otherService = moduleRef.getOptional(OtherService);
+    }
+  }
+  ```
+
+- `onInit(listener)`
+
+  The registered listener will be called once the module has been initialized.
+
+  ```javascript
+  class AppService {
+    constructor(forward) {
+      const moduleRef = forward(this);
+      const otherService = moduleRef.get(OtherService);
+      moduleRef.onInit(() => {
+        otherService.method();
+      });
+    }
+  }
+  ```
+
+  If you are certain that your components have circular dependencies, it is recommended that you only call component methods after the module have been initialized. In other words, call the methods within the `onInit` listener.
+
+  This is because a component may not be fully initialized yet if you have circular dependencies (e.g. class methods not yet included, etc.).
+
+Depending on where and what module the component is registered, it will receive a different **module reference** that has a reference to its module's available components.
+
+However, the **module reference** is not only accessible through components, but also when a module is initialized.
+
+### Initialize Module Declaration
 
 Start calling/instantiating the module declaration's components by resolving the module using the `moqule` function.
 
