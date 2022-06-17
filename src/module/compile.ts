@@ -47,22 +47,14 @@ function setupComponents(instance: ModuleInstance): void {
     ? { class: metadata.components }
     : metadata.components || {};
   const { moduleRef } = instance;
-  for (const ref of moduleComponents.class || []) {
-    saveComponent({ type: 'class', moduleRef, ref });
-  }
-  for (const type of ['function', 'async'] as const) {
-    for (const value of moduleComponents[type] || []) {
-      const obj = typeof value === 'function' ? { value } : value;
-      for (const name in obj) {
-        // cast as AsyncComponent so it works for both cases
-        const ref = obj[name] as AsyncComponent | undefined;
-        if (typeof ref === 'function') {
-          saveComponent(
-            type === 'async' ? { type, ref } : { type, moduleRef, ref }
-          );
-        }
-      }
+  for (const type of ['class', 'function'] as const) {
+    for (const ref of moduleComponents[type] || []) {
+      // assume type matches ref kind
+      saveComponent({ type, moduleRef, ref } as ComponentRef);
     }
+  }
+  for (const ref of moduleComponents.async || []) {
+    saveComponent({ type: 'async', ref });
   }
 
   if (exports.length === 0) {

@@ -17,11 +17,11 @@ export interface Components {
   /**
    * Function components to register for this module.
    */
-  function?: (FunctionComponent | { [K in string]?: FunctionComponent })[];
+  function?: FunctionComponent[];
   /**
    * Async function components to register for this module.
    */
-  async?: (AsyncComponent | { [K in string]?: AsyncComponent })[];
+  async?: AsyncComponent[];
 }
 
 /**
