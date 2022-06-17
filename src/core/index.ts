@@ -1,2 +1,2 @@
-export * from './moqule';
+export * from './init';
 export * from './register';

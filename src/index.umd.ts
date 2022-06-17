@@ -1,7 +1,5 @@
-import { moqule, register } from '.';
-import { defineProperties } from './utils';
+import { init, initAsync, register } from '.';
 
-// access via `moqule.register()`
-defineProperties<any>(moqule, { register });
+const moqule = { init, initAsync, register };
 
 export default moqule;
