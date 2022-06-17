@@ -1,3 +1,3 @@
 export * from './compare';
-export * from './define-properties';
-export * from './is-registered-module';
+export * from './defineProperties';
+export * from './isRegisteredModule';

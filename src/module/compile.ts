@@ -1,11 +1,5 @@
 import { register } from '../core/register';
-import {
-  AsyncComponent,
-  Component,
-  Module,
-  ModuleRef,
-  RegisteredModule
-} from '../types';
+import { Component, Module, ModuleRef, RegisteredModule } from '../types';
 import {
   ComponentList,
   ComponentRef,
@@ -13,7 +7,7 @@ import {
 } from '../types/instance.types';
 import { compare, isRegisteredModule } from '../utils';
 import { getMetadata } from './metadata';
-import { createModuleRef } from './module-ref';
+import { createModuleRef } from './moduleRef';
 
 function createInstance<T = unknown>(
   module: Module<T>,

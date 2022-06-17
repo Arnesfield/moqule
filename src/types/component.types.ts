@@ -1,4 +1,4 @@
-import { ModuleRef } from './module-ref.types';
+import { ModuleRef } from './moduleRef.types';
 
 /**
  * Forward the component value and retrieve the module reference.

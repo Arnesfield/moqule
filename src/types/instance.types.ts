@@ -4,8 +4,8 @@ import {
   FunctionComponent
 } from './component.types';
 import { ModuleMetadata } from './metadata.types';
-import { ModuleRef } from './module-ref.types';
 import { Module } from './module.types';
+import { ModuleRef } from './moduleRef.types';
 
 // NOTE: internal types
 
