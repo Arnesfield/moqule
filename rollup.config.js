@@ -1,3 +1,4 @@
+import eslint from '@rollup/plugin-eslint';
 import typescript from '@rollup/plugin-typescript';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
@@ -18,6 +19,15 @@ function umd(options) {
   return out({ format: 'umd', name, exports: 'default', ...options });
 }
 
+function dev(options) {
+  return {
+    input,
+    output: PROD ? { file: '/dev/null' } : undefined,
+    watch: { skipWrite: true },
+    ...options
+  };
+}
+
 const configs = [
   {
     input,
@@ -28,17 +38,13 @@ const configs = [
     plugins: [esbuild()]
   },
   { input, output: { file: pkg.types, format: 'esm' }, plugins: [dts()] },
-  // type checking only
-  {
-    input,
-    output: PROD ? { file: '/dev/null' } : undefined,
-    plugins: [typescript({ noEmit: true, sourceMap: false })],
-    watch: { skipWrite: true }
-  }
+  // lint and type checking
+  dev({ plugins: [eslint(), esbuild()] }),
+  dev({ plugins: [typescript({ noEmit: true, sourceMap: false })] })
 ];
 
 if (PROD) {
-  const bundle = {
+  const config = {
     input: inputUmd,
     output: [
       umd({ file: pkg.unpkg.replace(/\.min\.js$/, '.js') }),
@@ -46,7 +52,7 @@ if (PROD) {
     ],
     plugins: [esbuild()]
   };
-  configs.splice(1, 0, bundle);
+  configs.splice(1, 0, config);
 }
 
 export default configs;
