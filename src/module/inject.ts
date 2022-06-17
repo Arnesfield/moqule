@@ -81,11 +81,10 @@ export function inject(instances: ModuleInstance[]): void {
   for (const instance of instances) {
     // get all components to inject first
     const components = getProvidedComponents(instance, instances);
-    if (components.length === 0) {
-      continue;
-    }
-    for (const descendant of instance.descendants) {
-      injectComponents(descendant, components);
+    if (components.length > 0) {
+      for (const descendant of instance.descendants) {
+        injectComponents(descendant, components);
+      }
     }
   }
 }

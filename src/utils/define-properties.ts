@@ -4,12 +4,7 @@ export function defineProperties<T extends Record<string, any>>(
 ): T {
   const map: PropertyDescriptorMap = {};
   for (const key in props) {
-    map[key] = {
-      value: props[key],
-      writable: false,
-      enumerable: true,
-      configurable: false
-    };
+    map[key] = { value: props[key], enumerable: true };
   }
   return Object.defineProperties(obj, map);
 }
