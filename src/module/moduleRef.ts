@@ -48,7 +48,7 @@ export function createModuleRef(
         ' - If the component is provided by an ancestor module, ' +
         `module "${name}" should include it in "inject" options.\n` +
         ' - If async components were registered, make sure to use ' +
-        '`moqule.async(module)` instead.'
+        '`moqule.initAsync(module)` instead.'
     );
   };
 
