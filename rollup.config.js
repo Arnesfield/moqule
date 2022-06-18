@@ -9,7 +9,8 @@ const name = pkg.name.slice(pkg.name.lastIndexOf('/') + 1);
 const input = 'src/index.ts';
 const inputUmd = 'src/index.umd.ts';
 // skip sourcemap and umd unless production
-const PROD = !process.env.ROLLUP_WATCH;
+const WATCH = process.env.ROLLUP_WATCH;
+const PROD = !WATCH || process.env.NODE_ENV === 'production';
 
 function out(options) {
   return { sourcemap: PROD, exports: 'named', ...options };
@@ -22,7 +23,7 @@ function umd(options) {
 function dev(options) {
   return {
     input,
-    output: PROD ? { file: '/dev/null' } : undefined,
+    output: !WATCH ? { file: '/dev/null' } : undefined,
     watch: { skipWrite: true },
     ...options
   };

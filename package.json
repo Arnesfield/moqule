@@ -28,13 +28,12 @@
     "lib"
   ],
   "scripts": {
-    "prebuild": "npm run clean",
+    "prebuild": "rimraf lib",
     "build": "rollup -c",
-    "clean": "rimraf lib",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
-    "prestart": "npm run clean",
-    "start": "rollup -cw",
+    "start": "npm run build -- -w",
+    "start:prod": "npm run start -- --environment NODE_ENV:production",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
