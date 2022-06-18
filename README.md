@@ -12,10 +12,12 @@ Use the module:
 
 ```javascript
 // ES6
-import moqule from 'moqule';
+import * as moqule from 'moqule';
+import { init } from 'moqule';
 
 // CommonJS
-const { moqule } = require('moqule');
+const moqule = require('moqule');
+const { init } = require('moqule');
 ```
 
 Use the [UMD](https://github.com/umdjs/umd) build:
@@ -25,7 +27,7 @@ Use the [UMD](https://github.com/umdjs/umd) build:
 ```
 
 ```javascript
-const moduleRef = window.moqule(AppModule, options?);
+const moduleRef = window.moqule.init(AppModule);
 ```
 
 ## Usage
@@ -74,7 +76,7 @@ const AppModule = {
 };
 ```
 
-The `register` callback can be used for handling circular dependencies, but its main use case is for registering options (dynamic module) when we use or import the module for later.
+The `register` callback can be used for handling circular dependencies, but its main use case is for registering options ([dynamic module](#dynamic-modules)) when we use or import the module for later.
 
 ```typescript
 interface Options {} // module options type/interface
@@ -254,7 +256,7 @@ The metadata is stored within the module declaration.
 
   Using our previous example a while back, `OtherModule1` will inject `AppService` and exported modules from `MyModule`.
 
-These properties can be dynamic or changed through **register options** or **factory modules**. More importantly, what makes up a module is their **components**.
+These properties can be [dynamic](#dynamic-modules) or changed through **register options** or **factory modules**. More importantly, what makes up a module is their **components**.
 
 ### Components
 
@@ -366,7 +368,7 @@ Notice that the `ForwardRef` function takes in the return value of the component
 
 ---
 
-Due to its minimal design, `moqule` requires that the _first_ and only _required_ parameter of the class component constructor and the function component to be a `ForwardRef`.
+It should be noted that `moqule` requires that the _first_ and only _required_ parameter of the class component constructor and the function component to be a `ForwardRef`.
 
 If you do end up needing other required parameters for your components, you can create a wrapper function and register that function as the component instead.
 
@@ -407,31 +409,13 @@ const AppModule: Module = {
 };
 ```
 
+With this example, the `AppServiceWrapper` function component becomes the component instead of the `AppService` class.
+
 The same idea applies to `function` components.
 
-For `class` components, you can create a static function that acts as the function component wrapper which then creates your class instance.
+Also, for `class` components, you can create a static function that acts as the function component wrapper which then creates your class instance.
 
-```typescript
-// app.service.ts
-class AppService {
-  constructor(/* ... */) {}
-  static AppServiceWrapper(forward: ForwardRef<AppService>): AppService {
-    // note that using `new this(...)` instead may affect instantiation
-    return new AppService(/* ... */);
-  }
-}
-
-// app.module.ts
-const AppModule = {
-  name: 'AppModule',
-  components: {
-    function: [AppService.AppServiceWrapper]
-  },
-  exports: [AppService.AppServiceWrapper]
-};
-```
-
-It is up to you how you want to setup and register your components. It is also up to you what components you would like to reference in your component using **module reference**.
+In any case, it is up to you how you want to setup and register your components. It is also up to you what components you would like to reference in your component using **module reference**.
 
 ### Module Reference
 
@@ -520,41 +504,75 @@ It is mainly used within the components (the return value of the `FowardRef` fun
   }
   ```
 
-  If you are certain that your components have circular dependencies, it is recommended that you only call component methods after the module have been initialized. In other words, call the methods within the `onInit` listener.
+  If you are certain that your components have circular dependencies, it is recommended that you only access component properties or call its methods after the module has been initialized. In other words, access the properties or call the methods within the `onInit` listener.
 
-  This is because a component may not be fully initialized yet if you have circular dependencies (e.g. class methods not yet included, etc.).
+  The reason is that a component may not be fully initialized yet if you have circular dependencies (e.g. class methods not yet included, etc.).
 
 Depending on where and what module the component is registered, it will receive a different **module reference** that has a reference to its module's available components.
 
-However, the **module reference** is not only accessible through components, but also when a module is initialized.
+However, the **module reference** is not only accessible through the components, but also when a module is initialized.
 
 ### Initialize Module Declaration
 
-Start calling/instantiating the module declaration's components by resolving the module using the `moqule` function.
+Start calling/instantiating the module declaration's components by initializing the module.
 
 ```javascript
-import moqule from 'moqule';
+import * as moqule from 'moqule';
+// or
+const moqule = require('moqule');
 ```
 
-You can either resolve the module synchronously or asynchronously depending on whether your module includes async components or not.
+You can either initialize the module synchronously or asynchronously depending on whether your module includes async components or not.
 
-- Resolve synchronously with `moqule(module, options?)`:
+- `moqule.init(Module, options?, override?)`
 
-  ```javascript
-  const moduleRef = moqule(MyModule);
-  ```
-
-  This will immediately return the **module reference** and async components will load asynchronously.
-
-- Resolve asynchronously with `moqule.async(module, options?)`:
+  This will initialize synchronously and will immediately return the **module reference**.
 
   ```javascript
-  const moduleRef = await moqule.async(MyModule);
+  const moduleRef = moqule.init(MyModule);
   ```
 
-  This will wait for async components to load first before resolving the promise.
+  Async components will load asynchronously and most may not be resolved yet which could cause issues when a component tries to reference them via the **module reference**.
 
-Depending on your use case, you can resolve the same module more than once. This will call or instantiate its components again that is accessible to the **module reference** that it returns.
+- `moqule.initAsync(module, options?, override?)`
+
+  This will initialize asynchronously and will wait for async components to load first before resolving the promise.
+
+  ```javascript
+  const moduleRef = await moqule.initAsync(MyModule);
+  ```
+
+Depending on your use case, you can initialize the same module more than once. This will call or instantiate its components again that is accessible to the **module reference** that it returns.
+
+```javascript
+class MyComponent {}
+
+const MyModule = {
+  name: 'MyModule',
+  components: [MyComponent],
+  exports: [MyComponent]
+};
+
+const AppModule = {
+  name: 'AppModule',
+  imports: [MyModule]
+};
+
+// each init() call will call/instantiate components
+const appRef = moqule.init(AppModule);
+const appRef2 = moqule.init(AppModule);
+const myRef = moqule.init(MyModule);
+
+// get MyComponent from different module refs
+const c1 = appRef.get(MyComponent);
+const c2 = appRef2.get(MyComponent);
+const c3 = myRef.get(MyComponent);
+
+// different instances
+console.log(c1 !== c2); // true
+console.log(c1 !== c3); // true
+console.log(c2 !== c3); // true
+```
 
 ### Dynamic Modules
 
@@ -562,12 +580,11 @@ Depending on your use case, you can resolve the same module more than once. This
 
 ## Basic Example
 
-```typescript
-import moqule, { ForwardRef, Module, ModuleRef } from 'moqule';
+```javascript
+const moqule = require('moqule');
 
 class HelloService {
-  private readonly moduleRef: ModuleRef;
-  constructor(forward: ForwardRef<HelloService>) {
+  constructor(forward) {
     this.moduleRef = forward(this);
   }
   hello() {
@@ -575,12 +592,12 @@ class HelloService {
   }
 }
 
-const AppModule: Module = {
+const AppModule = {
   name: 'AppModule',
   components: [HelloService]
 };
 
-const moduleRef = moqule(AppModule);
+const moduleRef = moqule.init(AppModule);
 const helloService = moduleRef.get(HelloService);
 helloService.hello();
 ```
