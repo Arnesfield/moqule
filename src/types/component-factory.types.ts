@@ -11,6 +11,10 @@ import {
  */
 export interface ClassComponentFactory<T = unknown> {
   /**
+   * Component type.
+   */
+  readonly type: 'class';
+  /**
    * The component or name to match.
    */
   ref: string | ClassComponent<T>;
@@ -27,6 +31,10 @@ export interface ClassComponentFactory<T = unknown> {
  * @template T The component value or instance type.
  */
 export interface FunctionComponentFactory<T = unknown> {
+  /**
+   * Component type.
+   */
+  readonly type: 'function';
   /**
    * The component or name to match.
    */
@@ -45,6 +53,10 @@ export interface FunctionComponentFactory<T = unknown> {
  */
 export interface AsyncComponentFactory<T = unknown> {
   /**
+   * Component type.
+   */
+  readonly type: 'async';
+  /**
    * The component or name to match.
    */
   ref: string | AsyncComponent<T>;
@@ -56,19 +68,9 @@ export interface AsyncComponentFactory<T = unknown> {
 }
 
 /**
- * Component factory options.
+ * Component factory.
  */
-export interface FactoryOptions {
-  /**
-   * Class component factory.
-   */
-  class?: ClassComponentFactory[];
-  /**
-   * Function component factory.
-   */
-  function?: FunctionComponentFactory[];
-  /**
-   * Async function component factory.
-   */
-  async?: AsyncComponentFactory[];
-}
+export type ComponentFactory<T = unknown> =
+  | ClassComponentFactory<T>
+  | FunctionComponentFactory<T>
+  | AsyncComponentFactory<T>;

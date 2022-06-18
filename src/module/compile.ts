@@ -1,11 +1,11 @@
+import { COMPONENT_TYPES } from '../constants';
 import { register } from '../core/register';
 import {
-  ClassComponentFactory,
   Component,
-  FactoryOptions,
-  FunctionComponentFactory,
+  ComponentFactory,
   Module,
   ModuleRef,
+  Override,
   RegisteredModule
 } from '../types';
 import {
@@ -31,7 +31,7 @@ function createInstance<T = unknown>(
 // setup registered components of self
 function setupComponents(
   instance: ModuleInstance,
-  factoryOpts: FactoryOptions
+  factory: ComponentFactory[]
 ): void {
   const { components, metadata } = instance;
   // only export non-modules
@@ -40,10 +40,9 @@ function setupComponents(
   );
   const save = (component: ComponentRef) => {
     // add component factory
-    const items: (ClassComponentFactory | FunctionComponentFactory)[] =
-      factoryOpts[component.type] || [];
-    const item = items.find(item => compare(item.ref, component.ref));
-    component.factory = item?.factory;
+    component.factory = factory.find(
+      item => item.type === component.type && compare(item.ref, component.ref)
+    )?.factory;
     // save component
     components.self.push(component);
     components.module.push(component);
@@ -58,7 +57,7 @@ function setupComponents(
     ? { class: metadata.components }
     : metadata.components || {};
   const { moduleRef } = instance;
-  for (const type of ['class', 'function', 'async'] as const) {
+  for (const type of COMPONENT_TYPES) {
     for (const ref of moduleComponents[type] || []) {
       // assume type matches ref kind
       save(
@@ -86,13 +85,13 @@ function setupComponents(
 
 export interface CompileData {
   /**
-   * The component factory options.
-   */
-  factory?: FactoryOptions;
-  /**
    * The module instances. Created instances are pushed to this array.
    */
   instances: ModuleInstance[];
+  /**
+   * The override components.
+   */
+  override?: Override['components'];
   /**
    * Callback to add module init listeners.
    */
@@ -131,7 +130,7 @@ export function compile<T = unknown>(
   const instance = createInstance(module, options, data.onInit);
   data.instances.push(instance);
   // handle components and submodules
-  setupComponents(instance, data.factory || {});
+  setupComponents(instance, data.override || []);
   // compile all imported modules and get components
   // also save its descendants for injection later
   const descendants: ModuleInstance[] = [];

@@ -1,5 +1,5 @@
 import { register } from '../core/register';
-import { FactoryOptions, Module, ModuleRef } from '../types';
+import { Module, ModuleRef, Override } from '../types';
 import { ModuleInstance } from '../types/instance.types';
 import { compile } from './compile';
 import { resolveComponents } from './component';
@@ -36,22 +36,23 @@ export interface InitializeResult {
  * and its submodules based on their metadata.
  * @param module The module declaration to instantiate.
  * @param options The register options.
- * @param factory The component factory options.
+ * @param override The override options.
  * @returns The module reference and all available components.
  */
 export function initialize<T = unknown>(
   module: Module<T>,
   options: T,
-  factory: FactoryOptions | undefined
+  override: Override | Override['components'] | undefined
 ): InitializeResult {
   // create listeners separately so instances will get garbage collected
   const { emit, onInit } = createListener();
   // compile and inject provided components
   const instances: ModuleInstance[] = [];
+  const co = Array.isArray(override) ? override : override?.components || [];
   const { moduleRef } = compile(register(module, options), {
-    factory,
+    onInit,
     instances,
-    onInit
+    override: co
   });
   inject(instances);
   return { moduleRef, components: resolveComponents(instances, emit) };

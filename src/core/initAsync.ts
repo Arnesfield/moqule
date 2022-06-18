@@ -1,5 +1,5 @@
 import { initialize } from '../module';
-import { FactoryOptions, Module, ModuleRef } from '../types';
+import { Module, ModuleRef, Override } from '../types';
 
 /**
  * Initialize all modules and components.
@@ -10,15 +10,15 @@ import { FactoryOptions, Module, ModuleRef } from '../types';
  * @template T The register options type.
  * @param module The module declaration.
  * @param options The register options.
- * @param factory The component factory options.
+ * @param override The override options.
  * @returns The module reference.
  */
 export async function initAsync<T = unknown>(
   module: Module<T>,
   options?: T,
-  factory?: FactoryOptions
+  override?: Override | Override['components']
 ): Promise<ModuleRef> {
-  const init = initialize(module, options, factory);
+  const init = initialize(module, options, override);
   await init.components;
   return init.moduleRef;
 }
