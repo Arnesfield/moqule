@@ -51,7 +51,7 @@ const configs = [
   },
   // lint and type checking
   dev({ plugins: [eslint(), esbuild()] }),
-  dev({ plugins: [typescript({ noEmit: true, sourceMap: false })] })
+  dev({ plugins: [typescript()] })
 ];
 
 if (PROD) {
