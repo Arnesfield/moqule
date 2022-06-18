@@ -46,7 +46,10 @@ export function initialize<T = unknown>(
   const { emit, onInit } = createListener();
   // compile and inject provided components
   const instances: ModuleInstance[] = [];
-  const { moduleRef } = compile(register(module, options), instances, onInit);
+  const { moduleRef } = compile(register(module, options), {
+    instances,
+    onInit
+  });
   inject(instances);
   return { moduleRef, components: resolveComponents(instances, emit) };
 }

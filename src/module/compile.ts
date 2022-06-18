@@ -66,24 +66,33 @@ function setupComponents(instance: ModuleInstance): void {
   );
 }
 
+export interface CompileData {
+  /**
+   * The module instances. Created instances are pushed to this array.
+   */
+  instances: ModuleInstance[];
+  /**
+   * Callback to add module init listeners.
+   */
+  onInit: ModuleRef['onInit'];
+}
+
 /**
  * Compile and resolve the components of the module declaration and its submodules.
  * @param declaration The module declaration.
- * @param instances The module instances. Created instances are pushed to this array.
- * @param onInit Callback to add module init listeners.
+ * @param data The compile data.
  * @returns The created module instance.
  */
 export function compile<T = unknown>(
   declaration: Module<T> | RegisteredModule<T>,
-  instances: ModuleInstance[],
-  onInit: ModuleRef['onInit']
+  data: CompileData
 ): ModuleInstance<T> {
   const isRegistered = isRegisteredModule(declaration);
   const { module, options } = isRegistered
     ? declaration
     : register(declaration, undefined);
   // skip if already compiled
-  const existingInstance = instances.find(
+  const existingInstance = data.instances.find(
     (instance): instance is ModuleInstance<T> => instance.module === module
   );
   if (existingInstance) {
@@ -97,8 +106,8 @@ export function compile<T = unknown>(
   }
 
   // create module instance
-  const instance = createInstance(module, options, onInit);
-  instances.push(instance);
+  const instance = createInstance(module, options, data.onInit);
+  data.instances.push(instance);
   // handle components and submodules
   setupComponents(instance);
   // compile all imported modules and get components
@@ -106,7 +115,7 @@ export function compile<T = unknown>(
   const descendants: ModuleInstance[] = [];
   const { exports = [], imports = [] } = instance.metadata;
   for (const imported of imports) {
-    const compiled = compile(imported, instances, onInit);
+    const compiled = compile(imported, data);
     descendants.push(compiled, ...compiled.descendants);
     const shouldExport = exports.some(value => {
       return (
