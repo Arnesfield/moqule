@@ -1,5 +1,6 @@
 import eslint from '@rollup/plugin-eslint';
 import typescript from '@rollup/plugin-typescript';
+import bundleSize from 'rollup-plugin-bundle-size';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
 import { terser } from 'rollup-plugin-terser';
@@ -13,7 +14,12 @@ const WATCH = process.env.ROLLUP_WATCH;
 const PROD = !WATCH || process.env.NODE_ENV === 'production';
 
 function out(options) {
-  return { sourcemap: PROD, exports: 'named', ...options };
+  return {
+    sourcemap: PROD,
+    exports: 'named',
+    ...options,
+    plugins: [bundleSize(), ...(options.plugins || [])]
+  };
 }
 
 function umd(options) {
@@ -38,7 +44,11 @@ const configs = [
     ],
     plugins: [esbuild()]
   },
-  { input, output: { file: pkg.types, format: 'esm' }, plugins: [dts()] },
+  {
+    input,
+    output: { file: pkg.types, format: 'esm' },
+    plugins: [bundleSize(), dts()]
+  },
   // lint and type checking
   dev({ plugins: [eslint(), esbuild()] }),
   dev({ plugins: [typescript({ noEmit: true, sourceMap: false })] })
