@@ -19,15 +19,23 @@ export function resolveComponent<T = unknown>(
       component.value = value;
       return component.moduleRef;
     };
-    component.value = type === 'class' ? new ref(forwardRef) : ref(forwardRef);
+    component.value =
+      typeof component.factory === 'function'
+        ? component.factory(forwardRef)
+        : type === 'class'
+        ? new ref(forwardRef)
+        : ref(forwardRef);
   } else {
     // handle async
-    const promise = (component.asyncValue = Promise.resolve(ref()));
+    const promise = (component.asyncValue = Promise.resolve(
+      typeof component.factory === 'function' ? component.factory() : ref()
+    ));
     promise.then(result => {
       component.value = result;
       delete component.asyncValue;
     });
   }
+  delete component.factory;
   return component.value as Awaited<T>;
 }
 

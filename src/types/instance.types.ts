@@ -1,4 +1,9 @@
 import {
+  AsyncComponentFactory,
+  ClassComponentFactory,
+  FunctionComponentFactory
+} from './component-factory.types';
+import {
   AsyncComponent,
   ClassComponent,
   FunctionComponent
@@ -22,13 +27,19 @@ export type ComponentRef<T = unknown> = {
       readonly type: 'class';
       readonly moduleRef: ModuleRef;
       readonly ref: ClassComponent<T>;
+      factory?: ClassComponentFactory<T>['factory'];
     }
   | {
       readonly type: 'function';
       readonly moduleRef: ModuleRef;
       readonly ref: FunctionComponent<T>;
+      factory?: FunctionComponentFactory<T>['factory'];
     }
-  | { readonly type: 'async'; readonly ref: AsyncComponent<T> }
+  | {
+      readonly type: 'async';
+      readonly ref: AsyncComponent<T>;
+      factory?: AsyncComponentFactory<T>['factory'];
+    }
 );
 
 /**

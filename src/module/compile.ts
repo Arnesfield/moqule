@@ -1,5 +1,13 @@
 import { register } from '../core/register';
-import { Component, Module, ModuleRef, RegisteredModule } from '../types';
+import {
+  ClassComponentFactory,
+  Component,
+  FactoryOptions,
+  FunctionComponentFactory,
+  Module,
+  ModuleRef,
+  RegisteredModule
+} from '../types';
 import {
   ComponentList,
   ComponentRef,
@@ -21,13 +29,22 @@ function createInstance<T = unknown>(
 }
 
 // setup registered components of self
-function setupComponents(instance: ModuleInstance): void {
+function setupComponents(
+  instance: ModuleInstance,
+  factoryOpts: FactoryOptions
+): void {
   const { components, metadata } = instance;
   // only export non-modules
   const exports = (metadata.exports || []).filter(
     (id): id is string | Component => typeof id !== 'object'
   );
-  const saveComponent = (component: ComponentRef) => {
+  const save = (component: ComponentRef) => {
+    // add component factory
+    const items: (ClassComponentFactory | FunctionComponentFactory)[] =
+      factoryOpts[component.type] || [];
+    const item = items.find(item => compare(item.ref, component.ref));
+    component.factory = item?.factory;
+    // save component
     components.self.push(component);
     components.module.push(component);
     const index = exports.findIndex(value => compare(value, component.ref));
@@ -41,14 +58,15 @@ function setupComponents(instance: ModuleInstance): void {
     ? { class: metadata.components }
     : metadata.components || {};
   const { moduleRef } = instance;
-  for (const type of ['class', 'function'] as const) {
+  for (const type of ['class', 'function', 'async'] as const) {
     for (const ref of moduleComponents[type] || []) {
       // assume type matches ref kind
-      saveComponent({ type, moduleRef, ref } as ComponentRef);
+      save(
+        (type === 'async'
+          ? { type, ref }
+          : { type, moduleRef, ref }) as ComponentRef
+      );
     }
-  }
-  for (const ref of moduleComponents.async || []) {
-    saveComponent({ type: 'async', ref });
   }
 
   if (exports.length === 0) {
@@ -67,6 +85,10 @@ function setupComponents(instance: ModuleInstance): void {
 }
 
 export interface CompileData {
+  /**
+   * The component factory options.
+   */
+  factory?: FactoryOptions;
   /**
    * The module instances. Created instances are pushed to this array.
    */
@@ -109,7 +131,7 @@ export function compile<T = unknown>(
   const instance = createInstance(module, options, data.onInit);
   data.instances.push(instance);
   // handle components and submodules
-  setupComponents(instance);
+  setupComponents(instance, data.factory || {});
   // compile all imported modules and get components
   // also save its descendants for injection later
   const descendants: ModuleInstance[] = [];

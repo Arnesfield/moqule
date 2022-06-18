@@ -1,5 +1,5 @@
 import { register } from '../core/register';
-import { Module, ModuleRef } from '../types';
+import { FactoryOptions, Module, ModuleRef } from '../types';
 import { ModuleInstance } from '../types/instance.types';
 import { compile } from './compile';
 import { resolveComponents } from './component';
@@ -36,17 +36,20 @@ export interface InitializeResult {
  * and its submodules based on their metadata.
  * @param module The module declaration to instantiate.
  * @param options The register options.
+ * @param factory The component factory options.
  * @returns The module reference and all available components.
  */
 export function initialize<T = unknown>(
   module: Module<T>,
-  options: T
+  options: T,
+  factory: FactoryOptions | undefined
 ): InitializeResult {
   // create listeners separately so instances will get garbage collected
   const { emit, onInit } = createListener();
   // compile and inject provided components
   const instances: ModuleInstance[] = [];
   const { moduleRef } = compile(register(module, options), {
+    factory,
     instances,
     onInit
   });

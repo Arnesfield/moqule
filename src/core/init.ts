@@ -1,5 +1,5 @@
 import { initialize } from '../module';
-import { Module, ModuleRef } from '../types';
+import { FactoryOptions, Module, ModuleRef } from '../types';
 
 /**
  * Initialize all modules and components.
@@ -11,8 +11,13 @@ import { Module, ModuleRef } from '../types';
  * @template T The register options type.
  * @param module The module declaration.
  * @param options The register options.
+ * @param factory The component factory options.
  * @returns The module reference.
  */
-export function init<T = unknown>(module: Module<T>, options?: T): ModuleRef {
-  return initialize(module, options).moduleRef;
+export function init<T = unknown>(
+  module: Module<T>,
+  options?: T,
+  factory?: FactoryOptions
+): ModuleRef {
+  return initialize(module, options, factory).moduleRef;
 }
