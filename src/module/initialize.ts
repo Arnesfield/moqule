@@ -44,6 +44,9 @@ export function initialize<T = unknown>(
   options: T,
   override: Override | Override['components'] | undefined
 ): InitializeResult {
+  if (typeof module.name !== 'string') {
+    throw new Error('Module name is required and should be a string.');
+  }
   // create listeners separately so instances will get garbage collected
   const { emit, onInit } = createListener();
   // compile and inject provided components
