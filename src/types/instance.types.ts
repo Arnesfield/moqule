@@ -1,13 +1,13 @@
 import {
-  AsyncComponentFactory,
-  ClassComponentFactory,
-  FunctionComponentFactory
-} from './component-factory.types';
-import {
   AsyncComponent,
   ClassComponent,
   FunctionComponent
 } from './component.types';
+import {
+  AsyncComponentFactory,
+  ClassComponentFactory,
+  FunctionComponentFactory
+} from './componentFactory.types';
 import { ModuleMetadata } from './metadata.types';
 import { Module } from './module.types';
 import { ModuleRef } from './moduleRef.types';

@@ -1,14 +1,14 @@
 import {
-  AsyncComponentFactory,
-  ClassComponentFactory,
-  ComponentFactory,
-  FunctionComponentFactory
-} from './component-factory.types';
-import {
   AsyncComponent,
   ClassComponent,
   FunctionComponent
 } from './component.types';
+import {
+  AsyncComponentFactory,
+  ClassComponentFactory,
+  ComponentFactory,
+  FunctionComponentFactory
+} from './componentFactory.types';
 
 /**
  * Override object.
