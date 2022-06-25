@@ -36,14 +36,6 @@ function dev(options) {
 
 const configs = [
   {
-    input,
-    output: [
-      out({ file: pkg.main, format: 'cjs' }),
-      out({ file: pkg.module, format: 'esm' })
-    ],
-    plugins: [esbuild()]
-  },
-  {
     input: inputUmd,
     output: umd({ file: pkg.unpkg.replace(/\.min\.js$/, '.js') }),
     plugins: [esbuild()],

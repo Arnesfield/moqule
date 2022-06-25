@@ -29,11 +29,11 @@
   ],
   "scripts": {
     "prebuild": "rimraf lib",
-    "build": "rollup -c",
+    "build": "node scripts/build",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
     "start": "npm run build -- -w",
-    "start:prod": "npm run start -- --environment NODE_ENV:production",
+    "start:prod": "npm run start -- -p",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
