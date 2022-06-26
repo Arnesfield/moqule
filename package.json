@@ -35,7 +35,12 @@
     "lint:fix": "npm run lint -- --fix",
     "start": "npm run build -- -w",
     "start:prod": "npm run start -- -p",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm-run-all -s test:clean test:build test:mocha test:clean",
+    "posttest": "npm-run-all -p \"lint -- --max-warnings 0\" ts",
+    "test:build": "node scripts/build-test src/*.ts src/**/*.ts",
+    "test:clean": "rimraf .test",
+    "test:mocha": "NODE_OPTIONS='--experimental-specifier-resolution=node' mocha .test/**/*.spec.js",
+    "test:watch": "npm-run-all -s test:clean -p \"test:build -- -w\" \"test:mocha -- --watch --parallel\"",
     "ts": "tsc --noEmit"
   },
   "devDependencies": {
