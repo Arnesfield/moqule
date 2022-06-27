@@ -12,7 +12,9 @@ const esbuildOpts = [
   PROD && '--sourcemap'
 ];
 
+const checks = !WATCH ? ['npm run check'.split(' ')] : [];
 exec(
+  ...checks,
   [
     'esbuild',
     input,

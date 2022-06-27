@@ -30,11 +30,13 @@
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "node scripts/build",
+    "check": "npm-run-all -p \"lint -- --max-warnings 0\" ts",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
     "start": "npm run build -- -w",
     "start:prod": "npm run start -- -p",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ts": "tsc --noEmit"
   },
   "devDependencies": {
     "@rollup/plugin-eslint": "^8.0.2",
