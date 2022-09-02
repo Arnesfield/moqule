@@ -1,4 +1,4 @@
 export * from './init';
 export * from './initAsync';
-export * from './override';
+export * from './mock';
 export * from './register';

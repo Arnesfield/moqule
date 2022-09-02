@@ -1,5 +1,5 @@
 import { initialize } from '../module';
-import { Module, ModuleRef, Override } from '../types';
+import { Module, ModuleRef } from '../types';
 
 /**
  * Initialize all modules and components.
@@ -10,15 +10,13 @@ import { Module, ModuleRef, Override } from '../types';
  * @template T The register options type.
  * @param module The module declaration.
  * @param options The register options.
- * @param override The override options.
  * @returns The module reference.
  */
 export async function initAsync<T = unknown>(
   module: Module<T>,
-  options?: T,
-  override?: Override | Override['components']
+  options?: T
 ): Promise<ModuleRef> {
-  const init = initialize(module, options, override);
+  const init = initialize(module, options);
   await init.components;
   return init.moduleRef;
 }

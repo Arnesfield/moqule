@@ -1,5 +1,5 @@
 import { register } from '../core/register';
-import { Module, ModuleRef, Override } from '../types';
+import { Module, ModuleRef, ComponentFactory } from '../types';
 import { ModuleInstance } from '../types/instance.types';
 import { compile } from './compile';
 import { resolveComponents } from './component';
@@ -36,13 +36,13 @@ export interface InitializeResult {
  * and its submodules based on their metadata.
  * @param module The module declaration to instantiate.
  * @param options The register options.
- * @param override The override options.
+ * @param components The mock components.
  * @returns The module reference and all available components.
  */
 export function initialize<T = unknown>(
   module: Module<T>,
   options: T,
-  override: Override | Override['components'] | undefined
+  components: ComponentFactory[] = []
 ): InitializeResult {
   if (typeof module.name !== 'string') {
     throw new Error('Module name is required and should be a string.');
@@ -51,11 +51,10 @@ export function initialize<T = unknown>(
   const { emit, onInit } = createListener();
   // compile and inject provided components
   const instances: ModuleInstance[] = [];
-  const co = Array.isArray(override) ? override : override?.components || [];
   const { moduleRef } = compile(register(module, options), {
     onInit,
     instances,
-    override: co
+    components
   });
   inject(instances);
   return { moduleRef, components: resolveComponents(instances, emit) };

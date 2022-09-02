@@ -76,7 +76,7 @@ const AppModule = {
 };
 ```
 
-The `register` callback can be used for handling circular dependencies, but its main use case is for registering options ([dynamic module](#dynamic-modules)) when we use or import the module for later.
+The `register` callback can be used for handling circular dependencies, but its main use case is for registering options ([dynamic modules](#dynamic-modules)) when we use or import the module for later.
 
 ```typescript
 interface Options {} // module options type/interface
@@ -524,7 +524,7 @@ const moqule = require('moqule');
 
 You can either initialize the module synchronously or asynchronously depending on whether your module includes async components or not.
 
-- `moqule.init(Module, options?, override?)`
+- `moqule.init(module, options?)`
 
   This will initialize synchronously and will immediately return the **module reference**.
 
@@ -534,7 +534,7 @@ You can either initialize the module synchronously or asynchronously depending o
 
   Async components will load asynchronously and most may not be resolved yet which could cause issues when a component tries to reference them via the **module reference**.
 
-- `moqule.initAsync(module, options?, override?)`
+- `moqule.initAsync(module, options?)`
 
   This will initialize asynchronously and will wait for async components to load first before resolving the promise.
 

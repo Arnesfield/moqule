@@ -9,11 +9,13 @@ import {
   ComponentFactory,
   FunctionComponentFactory
 } from './componentFactory.types';
+import { Module } from './module.types';
+import { ModuleRef } from './moduleRef.types';
 
 /**
- * Override object.
+ * Mock object.
  */
-export interface Override {
+export interface Mock {
   /**
    * Factory components.
    */
@@ -22,7 +24,7 @@ export interface Override {
    * Override class component.
    * @param ref The class component to override.
    * @param factory Function that returns the component value.
-   * @returns The override object.
+   * @returns The mock object.
    */
   class<T = unknown>(
     ref: string | ClassComponent<T>,
@@ -32,7 +34,7 @@ export interface Override {
    * Override function component.
    * @param ref The function component to override.
    * @param factory Function that returns the component value.
-   * @returns The override object.
+   * @returns The mock object.
    */
   function<T = unknown>(
     ref: string | FunctionComponent<T>,
@@ -42,10 +44,35 @@ export interface Override {
    * Override async function component.
    * @param ref The async function component to override.
    * @param factory Function that returns the component value.
-   * @returns The override object.
+   * @returns The mock object.
    */
   async<T = unknown>(
     ref: string | AsyncComponent<T>,
     factory: AsyncComponentFactory<T>['factory']
   ): this;
+  /**
+   * Initialize all modules and components.
+   *
+   * All async components are resolved asynchronously.
+   *
+   * You may use `mock.initAsync(module, options?)`
+   * if at least one module is using async components.
+   * @template T The register options type.
+   * @param module The module declaration.
+   * @param options The register options.
+   * @returns The module reference.
+   */
+  init<T = unknown>(module: Module<T>, options?: T): ModuleRef;
+  /**
+   * Initialize all modules and components.
+   *
+   * All async components are resolved before the promise is fulfilled.
+   *
+   * You may use `init(module, options?)` if no module is using async components.
+   * @template T The register options type.
+   * @param module The module declaration.
+   * @param options The register options.
+   * @returns The module reference.
+   */
+  initAsync<T = unknown>(module: Module<T>, options?: T): Promise<ModuleRef>;
 }

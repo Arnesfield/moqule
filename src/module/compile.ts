@@ -5,7 +5,6 @@ import {
   ComponentFactory,
   Module,
   ModuleRef,
-  Override,
   RegisteredModule
 } from '../types';
 import {
@@ -89,9 +88,9 @@ export interface CompileData {
    */
   instances: ModuleInstance[];
   /**
-   * The override components.
+   * The mock components.
    */
-  override?: Override['components'];
+  components: ComponentFactory[];
   /**
    * Callback to add module init listeners.
    */
@@ -130,7 +129,7 @@ export function compile<T = unknown>(
   const instance = createInstance(module, options, data.onInit);
   data.instances.push(instance);
   // handle components and submodules
-  setupComponents(instance, data.override || []);
+  setupComponents(instance, data.components);
   // compile all imported modules and get components
   // also save its descendants for injection later
   const descendants: ModuleInstance[] = [];

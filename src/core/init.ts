@@ -1,5 +1,5 @@
 import { initialize } from '../module';
-import { Module, ModuleRef, Override } from '../types';
+import { Module, ModuleRef } from '../types';
 
 /**
  * Initialize all modules and components.
@@ -11,13 +11,8 @@ import { Module, ModuleRef, Override } from '../types';
  * @template T The register options type.
  * @param module The module declaration.
  * @param options The register options.
- * @param override The override options.
  * @returns The module reference.
  */
-export function init<T = unknown>(
-  module: Module<T>,
-  options?: T,
-  override?: Override | Override['components']
-): ModuleRef {
-  return initialize(module, options, override).moduleRef;
+export function init<T = unknown>(module: Module<T>, options?: T): ModuleRef {
+  return initialize(module, options).moduleRef;
 }
