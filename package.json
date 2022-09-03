@@ -30,11 +30,14 @@
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "node scripts/build",
+    "build:cjs": "esbuild src/index.ts --bundle --format=cjs --outdir=lib --out-extension:.js=.cjs",
+    "build:esm": "esbuild src/index.ts --bundle --format=esm --outdir=lib --out-extension:.js=.mjs",
+    "build:rollup": "rollup -c",
     "check": "npm-run-all -p \"lint -- --max-warnings 0\" ts",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
     "start": "npm run build -- -w",
-    "start:prod": "npm run start -- -p",
+    "start:prod": "npm run build -- -w -p",
     "test": "echo \"Error: no test specified\" && exit 1",
     "ts": "tsc --noEmit"
   },
