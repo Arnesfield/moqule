@@ -38,7 +38,9 @@
     "lint:strict": "npm run lint -- --max-warnings 0",
     "start": "npm run build -- -w",
     "start:prod": "npm run build -- -w -p",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm-run-all -s test:mocha check",
+    "test:mocha": "mocha -r esbuild-runner/register **/*.spec.ts",
+    "test:watch": "npm run test:mocha -- --watch --watch-files src",
     "ts": "tsc --noEmit"
   },
   "devDependencies": {
