@@ -13,22 +13,22 @@ export function resolveComponent<T = unknown>(
     return component.value as Awaited<T>;
   }
   component.resolved = true;
-  const { ref, type } = component;
+  const { factory, ref, type } = component;
   if (type !== 'async') {
     const forwardRef: ForwardRef<T> = value => {
       component.value = value;
       return component.moduleRef;
     };
     component.value =
-      typeof component.factory === 'function'
-        ? component.factory(forwardRef)
+      typeof factory === 'function'
+        ? factory(forwardRef)
         : type === 'class'
         ? new ref(forwardRef)
         : ref(forwardRef);
   } else {
     // handle async
     const promise = (component.asyncValue = Promise.resolve(
-      typeof component.factory === 'function' ? component.factory() : ref()
+      typeof factory === 'function' ? factory() : ref()
     ));
     promise.then(result => {
       component.value = result;
