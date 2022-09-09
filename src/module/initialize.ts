@@ -36,7 +36,7 @@ export interface InitializeResult {
  * and its submodules based on their metadata.
  * @param module The module declaration to instantiate.
  * @param options The register options.
- * @param components The mock components.
+ * @param components The override components.
  * @returns The module reference and all available components.
  */
 export function initialize<T = unknown>(

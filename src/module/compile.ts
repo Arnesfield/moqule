@@ -88,7 +88,7 @@ export interface CompileData {
    */
   instances: ModuleInstance[];
   /**
-   * The mock components.
+   * The override components.
    */
   components: ComponentFactory[];
   /**

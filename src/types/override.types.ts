@@ -13,9 +13,9 @@ import { Module } from './module.types';
 import { ModuleRef } from './moduleRef.types';
 
 /**
- * Mock object.
+ * Override object.
  */
-export interface Mock {
+export interface Override {
   /**
    * Factory components.
    */
@@ -24,7 +24,7 @@ export interface Mock {
    * Override class component.
    * @param ref The class component to override.
    * @param factory Function that returns the component value.
-   * @returns The mock object.
+   * @returns The override object.
    */
   class<T = unknown>(
     ref: string | ClassComponent<T>,
@@ -34,7 +34,7 @@ export interface Mock {
    * Override function component.
    * @param ref The function component to override.
    * @param factory Function that returns the component value.
-   * @returns The mock object.
+   * @returns The override object.
    */
   function<T = unknown>(
     ref: string | FunctionComponent<T>,
@@ -44,7 +44,7 @@ export interface Mock {
    * Override async function component.
    * @param ref The async function component to override.
    * @param factory Function that returns the component value.
-   * @returns The mock object.
+   * @returns The override object.
    */
   async<T = unknown>(
     ref: string | AsyncComponent<T>,
@@ -55,7 +55,7 @@ export interface Mock {
    *
    * All async components are resolved asynchronously.
    *
-   * You may use `mock.initAsync(module, options?)`
+   * You may use `override.initAsync(module, options?)`
    * if at least one module is using async components.
    * @template T The register options type.
    * @param module The module declaration.
@@ -68,7 +68,8 @@ export interface Mock {
    *
    * All async components are resolved before the promise is fulfilled.
    *
-   * You may use `init(module, options?)` if no module is using async components.
+   * You may use `override.init(module, options?)`
+   * if no module is using async components.
    * @template T The register options type.
    * @param module The module declaration.
    * @param options The register options.
