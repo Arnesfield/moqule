@@ -6,7 +6,8 @@ import {
 import {
   AsyncComponentFactory,
   ClassComponentFactory,
-  FunctionComponentFactory
+  FunctionComponentFactory,
+  ValueComponentFactory
 } from './componentFactory.types';
 import { ModuleMetadata } from './metadata.types';
 import { Module } from './module.types';
@@ -27,18 +28,35 @@ export type ComponentRef<T = unknown> = {
       readonly type: 'class';
       readonly moduleRef: ModuleRef;
       readonly ref: ClassComponent<T>;
+      readonly refs: (string | symbol | ClassComponent)[];
+      exportRefs?: (string | symbol | ClassComponent)[];
+      provideRefs?: (string | symbol | ClassComponent)[];
       factory?: ClassComponentFactory<T>['factory'];
     }
   | {
       readonly type: 'function';
       readonly moduleRef: ModuleRef;
       readonly ref: FunctionComponent<T>;
+      readonly refs: (string | symbol | FunctionComponent)[];
+      exportRefs?: (string | symbol | FunctionComponent)[];
+      provideRefs?: (string | symbol | FunctionComponent)[];
       factory?: FunctionComponentFactory<T>['factory'];
     }
   | {
       readonly type: 'async';
       readonly ref: AsyncComponent<T>;
+      readonly refs: (string | symbol | AsyncComponent)[];
+      exportRefs?: (string | symbol | AsyncComponent)[];
+      provideRefs?: (string | symbol | AsyncComponent)[];
       factory?: AsyncComponentFactory<T>['factory'];
+    }
+  | {
+      readonly type: 'value';
+      readonly ref?: never;
+      readonly refs: (string | symbol)[];
+      exportRefs?: (string | symbol)[];
+      provideRefs?: (string | symbol)[];
+      factory?: ValueComponentFactory<T>['factory'];
     }
 );
 
@@ -49,7 +67,8 @@ export type ComponentRef<T = unknown> = {
  */
 export interface ComponentList {
   readonly exported: ComponentRef[];
-  readonly module: ComponentRef[];
+  readonly imported: ComponentRef[];
+  readonly injected: ComponentRef[];
   readonly self: ComponentRef[];
 }
 

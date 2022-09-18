@@ -1,20 +1,23 @@
-import { Component, Module } from '../types';
+import { Component } from '../types/component.types';
+import { ComponentRef } from '../types/instance.types';
+import { Module } from '../types/module.types';
 
 /**
- * Compare module, component, or name.
- * @param a Module, component, or name.
- * @param b Module, component, or name.
- * @returns Boolean which determines if `a` and `b` matches.
+ * Compare module, component, componentRef, name, or symbol.
+ * @param a Value to compare.
+ * @param b Value to compare.
+ * @returns Boolean which determines if `a` and `b` match.
  */
 export function compare(
-  a: string | Module | Component,
-  b: string | Module | Component
+  a: string | symbol | Module | Component | ComponentRef['refs'],
+  b: string | symbol | Module | Component | ComponentRef['refs']
 ): boolean {
-  if (typeof a === typeof b) {
+  const aArr = Array.isArray(a);
+  const bArr = Array.isArray(b);
+  if (typeof a === typeof b && !aArr && !bArr) {
     return a === b;
   }
-  // compare by name
-  const aName = typeof a === 'string' ? a : a.name;
-  const bName = typeof b === 'string' ? b : b.name;
-  return aName === bName;
+  const aRefs = aArr ? a : typeof a === 'object' ? [a.name] : [a];
+  const bRefs = bArr ? b : typeof b === 'object' ? [b.name] : [b];
+  return aRefs.some(aRef => bRefs.includes(aRef));
 }

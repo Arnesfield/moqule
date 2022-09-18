@@ -1,4 +1,4 @@
-import { Module, RegisteredModule } from '../types';
+import { Module, RegisteredModule } from '../types/module.types';
 
 /**
  * Register options to the module declaration.

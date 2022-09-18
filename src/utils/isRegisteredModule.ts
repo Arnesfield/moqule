@@ -1,4 +1,4 @@
-import { Module, RegisteredModule } from '../types';
+import { Module, RegisteredModule } from '../types/module.types';
 
 export function isRegisteredModule<T = unknown>(
   module: Module<T> | RegisteredModule<T>

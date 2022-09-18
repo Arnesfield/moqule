@@ -7,7 +7,8 @@ import {
   AsyncComponentFactory,
   ClassComponentFactory,
   ComponentFactory,
-  FunctionComponentFactory
+  FunctionComponentFactory,
+  ValueComponentFactory
 } from './componentFactory.types';
 import { Module } from './module.types';
 import { ModuleRef } from './moduleRef.types';
@@ -27,7 +28,7 @@ export interface Override {
    * @returns The override object.
    */
   class<T = unknown>(
-    ref: string | ClassComponent<T>,
+    ref: string | symbol | ClassComponent<T>,
     factory: ClassComponentFactory<T>['factory']
   ): this;
   /**
@@ -37,7 +38,7 @@ export interface Override {
    * @returns The override object.
    */
   function<T = unknown>(
-    ref: string | FunctionComponent<T>,
+    ref: string | symbol | FunctionComponent<T>,
     factory: FunctionComponentFactory<T>['factory']
   ): this;
   /**
@@ -47,8 +48,18 @@ export interface Override {
    * @returns The override object.
    */
   async<T = unknown>(
-    ref: string | AsyncComponent<T>,
+    ref: string | symbol | AsyncComponent<T>,
     factory: AsyncComponentFactory<T>['factory']
+  ): this;
+  /**
+   * Override value component.
+   * @param ref The value component to override.
+   * @param factory Function that returns the component value.
+   * @returns The override object.
+   */
+  value<T = unknown>(
+    ref: string | symbol,
+    factory: ValueComponentFactory<T>['factory']
   ): this;
   /**
    * Initialize all modules and components.

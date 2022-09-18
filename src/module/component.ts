@@ -1,4 +1,4 @@
-import { ForwardRef } from '../types';
+import { ForwardRef } from '../types/component.types';
 import { ComponentRef, ModuleInstance } from '../types/instance.types';
 
 /**
@@ -14,7 +14,20 @@ export function resolveComponent<T = unknown>(
   }
   component.resolved = true;
   const { factory, ref, type } = component;
-  if (type !== 'async') {
+  if (type === 'value') {
+    if (typeof factory === 'function') {
+      component.value = factory();
+    }
+  } else if (type === 'async') {
+    // handle async
+    const promise = (component.asyncValue = Promise.resolve(
+      typeof factory === 'function' ? factory() : ref()
+    ));
+    promise.then(result => {
+      component.value = result;
+      delete component.asyncValue;
+    });
+  } else {
     const forwardRef: ForwardRef<T> = value => {
       component.value = value;
       return component.moduleRef;
@@ -25,15 +38,6 @@ export function resolveComponent<T = unknown>(
         : type === 'class'
         ? new ref(forwardRef)
         : ref(forwardRef);
-  } else {
-    // handle async
-    const promise = (component.asyncValue = Promise.resolve(
-      typeof factory === 'function' ? factory() : ref()
-    ));
-    promise.then(result => {
-      component.value = result;
-      delete component.asyncValue;
-    });
   }
   delete component.factory;
   return component.value as Awaited<T>;

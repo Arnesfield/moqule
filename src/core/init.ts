@@ -1,5 +1,6 @@
-import { initialize } from '../module';
-import { Module, ModuleRef } from '../types';
+import { initialize } from '../module/initialize';
+import { Module } from '../types/module.types';
+import { ModuleRef } from '../types/moduleRef.types';
 
 /**
  * Initialize all modules and components.

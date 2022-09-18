@@ -1,6 +1,8 @@
 import { register } from '../core/register';
-import { Module, ModuleRef, ComponentFactory } from '../types';
+import { ComponentFactory } from '../types/componentFactory.types';
 import { ModuleInstance } from '../types/instance.types';
+import { Module } from '../types/module.types';
+import { ModuleRef } from '../types/moduleRef.types';
 import { compile } from './compile';
 import { resolveComponents } from './component';
 import { inject } from './inject';
@@ -48,14 +50,15 @@ export function initialize<T = unknown>(
     throw new Error('Module name is required and should be a string.');
   }
   // create listeners separately so instances will get garbage collected
-  const { emit, onInit } = createListener();
+  const l = createListener();
   // compile and inject provided components
   const instances: ModuleInstance[] = [];
-  const { moduleRef } = compile(register(module, options), {
-    onInit,
+  const { moduleRef } = compile(
+    register(module, options),
     instances,
+    l.onInit,
     components
-  });
+  );
   inject(instances);
-  return { moduleRef, components: resolveComponents(instances, emit) };
+  return { moduleRef, components: resolveComponents(instances, l.emit) };
 }

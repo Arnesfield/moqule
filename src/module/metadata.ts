@@ -1,5 +1,5 @@
-import { Module, ModuleMetadata } from '../types';
-import { ModuleWithMetadata } from '../types/module.types';
+import { ModuleMetadata } from '../types/metadata.types';
+import { Module, ModuleWithMetadata } from '../types/module.types';
 
 function isMetadata(module: any): module is ModuleWithMetadata {
   return typeof module.register !== 'function';

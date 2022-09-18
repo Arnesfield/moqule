@@ -15,9 +15,9 @@ export interface ClassComponentFactory<T = unknown> {
    */
   readonly type: 'class';
   /**
-   * The component or name to match.
+   * The component, name, or symbol to match.
    */
-  ref: string | ClassComponent<T>;
+  ref: string | symbol | ClassComponent<T>;
   /**
    * Factory function.
    * @param forwardRef Forward the component value and retrieve the module reference.
@@ -36,9 +36,9 @@ export interface FunctionComponentFactory<T = unknown> {
    */
   readonly type: 'function';
   /**
-   * The component or name to match.
+   * The component, name, or symbol to match.
    */
-  ref: string | FunctionComponent<T>;
+  ref: string | symbol | FunctionComponent<T>;
   /**
    * Factory function.
    * @param forwardRef Forward the component value and retrieve the module reference.
@@ -57,9 +57,9 @@ export interface AsyncComponentFactory<T = unknown> {
    */
   readonly type: 'async';
   /**
-   * The component or name to match.
+   * The component, name, or symbol to match.
    */
-  ref: string | AsyncComponent<T>;
+  ref: string | symbol | AsyncComponent<T>;
   /**
    * Factory function.
    * @returns The component value or instance.
@@ -68,9 +68,30 @@ export interface AsyncComponentFactory<T = unknown> {
 }
 
 /**
+ * Value component factory.
+ * @template T The component value or instance type.
+ */
+export interface ValueComponentFactory<T = unknown> {
+  /**
+   * Component type.
+   */
+  readonly type: 'value';
+  /**
+   * The component, name, or symbol to match.
+   */
+  ref: string | symbol;
+  /**
+   * Factory function.
+   * @returns The component value or instance.
+   */
+  factory(): T;
+}
+
+/**
  * Component factory.
  */
 export type ComponentFactory<T = unknown> =
   | ClassComponentFactory<T>
   | FunctionComponentFactory<T>
-  | AsyncComponentFactory<T>;
+  | AsyncComponentFactory<T>
+  | ValueComponentFactory<T>;

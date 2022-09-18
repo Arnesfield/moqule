@@ -1,22 +1,24 @@
-import { Component, ModuleRef } from '../types';
-import { ComponentRef } from '../types/instance.types';
-import { compare, defineProperties } from '../utils';
+import { Component } from '../types/component.types';
+import { ComponentList, ComponentRef } from '../types/instance.types';
+import { ModuleRef } from '../types/moduleRef.types';
+import { compare } from '../utils/compare';
+import { defineProperties } from '../utils/defineProperties';
 import { resolveComponent } from './component';
 
 /**
  * Create a module reference.
  * @param name The module name.
- * @param components The module components (`ComponentList.module`).
+ * @param list The component list.
  * @param onInit Callback to add module init listeners.
  * @returns The module reference.
  */
 export function createModuleRef(
   name: string,
-  components: ComponentRef[],
+  list: ComponentList,
   onInit: ModuleRef['onInit']
 ): ModuleRef {
   const getOptional: ModuleRef['getOptional'] = <T = unknown>(
-    id: string | Component<T>
+    id: string | symbol | Component<T>
   ) => {
     if (typeof id === 'undefined') {
       throw new Error(
@@ -24,19 +26,24 @@ export function createModuleRef(
           'intentional, it might be caused by circular dependencies or imports.'
       );
     }
-    const component = components.find(
-      (component): component is ComponentRef<T> => compare(id, component.ref)
-    );
-    return component ? resolveComponent(component) : undefined;
+    // reference imported components by their exported refs
+    const component =
+      list.self.find(c => compare(id, c.refs)) ||
+      list.imported.find(c => c.exportRefs && compare(id, c.exportRefs)) ||
+      list.injected.find(c => c.provideRefs && compare(id, c.provideRefs));
+    return component && resolveComponent(component as ComponentRef<T>);
   };
 
-  const get: ModuleRef['get'] = <T = unknown>(id: string | Component<T>) => {
+  const get: ModuleRef['get'] = <T = unknown>(
+    id: string | symbol | Component<T>
+  ) => {
     const value = getOptional<T>(id);
     if (typeof value !== 'undefined') {
       return value;
     }
     const wrap = typeof id === 'string';
-    const componentName = wrap ? id : id.name;
+    const componentName =
+      wrap || typeof id === 'symbol' ? id.toString() : id.name;
     const wrappedName = wrap ? `"${componentName}"` : componentName;
     throw new Error(
       `Module "${name}" cannot find component "${componentName}".\n` +
