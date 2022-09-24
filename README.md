@@ -13,11 +13,9 @@ Use the module:
 ```javascript
 // ES6
 import * as moqule from 'moqule';
-import { init } from 'moqule';
 
 // CommonJS
 const moqule = require('moqule');
-const { init } = require('moqule');
 ```
 
 Use the [UMD](https://github.com/umdjs/umd) build:
@@ -34,7 +32,7 @@ const moduleRef = window.moqule.init(AppModule);
 
 ### Module Declaration
 
-A **module declaration** is a simple object that contains the `name` of the module and its metadata.
+A **module declaration** is an object that contains the `name` of the module and its [metadata](#module-metadata).
 
 ```javascript
 const AppModule = {
@@ -49,18 +47,18 @@ const AppModule = {
 };
 ```
 
-Using [TypeScript](https://www.typescriptlang.org/), you can import the `Module` type from the package to include type checking for the module object.
+> **Tip**: Using [TypeScript](https://www.typescriptlang.org/), you can import the `Module` type from the package to include type checking for the module object. Example:
+>
+> ```typescript
+> import { Module } from 'moqule';
+>
+> const AppModule: Module = {
+>   name: 'AppModule'
+>   // ...
+> };
+> ```
 
-```typescript
-import { Module } from 'moqule';
-
-const AppModule: Module = {
-  name: 'AppModule'
-  // ...
-};
-```
-
-The module declaration also accepts a `register` property callback that returns the metadata.
+The **module declaration** also accepts a `register` property callback that returns the [metadata](#module-metadata):
 
 ```javascript
 const AppModule = {
@@ -76,310 +74,313 @@ const AppModule = {
 };
 ```
 
-The `register` callback can be used for handling circular dependencies, but its main use case is for registering options ([dynamic modules](#dynamic-modules)) when we use or import the module for later.
+The `register` callback can be used for handling circular dependencies/imports, but its main use case is for registering options ([dynamic modules](#dynamic-modules)) when we use or import the module for later.
 
 ```typescript
-interface Options {} // module options type/interface
+// module options type/interface
+interface Options {
+  // ...
+}
 
 const AppModule: Module<Options> = {
   name: 'AppModule',
   register: (options: Options) => ({
-    imports: []
-    // ...
+    // register metadata (all optional properties)
+    imports: [],
+    components: [],
+    exports: [],
+    provide: [],
+    inject: []
   })
 };
 ```
 
-From there, we can use the registered options to update the **module metadata**.
+From there, we can use the registered options to update the [module metadata](#module-metadata).
 
 ### Module Metadata
 
-The **module metadata** is an object that contains the information of the module and its components.
+The **module metadata** is an object that contains the information of the module and its [components](#components).
 
 ```typescript
 interface ModuleMetadata {
   imports?: (Module | RegisteredModule)[];
-  components?: ClassComponent[] | Components;
-  exports?: (string | Module | Component)[];
-  provide?: (string | Module | Component)[];
-  inject?: boolean | (string | Component)[];
+  components?: (ClassComponent | ModuleComponent)[];
+  exports?: (string | symbol | Module | Component)[];
+  provide?: (string | symbol | Module | Component)[];
+  inject?: boolean | (string | symbol | Component)[];
 }
 ```
 
-The metadata is stored within the module declaration.
+The **module metadata** is stored within the [module declaration](#module-declaration), either together with the module object or returned by the module's `register` callback.
 
-- `imports`
+> **Tip**: The **module metadata** properties can be changed through **register options** or **factory modules**.
 
-  Import other modules to the module. The module will gain access to the exported components (`metadata.exports`) of the imported modules.
+#### `metadata.imports`
 
-  ```javascript
-  const MyModule = {
-    name: 'MyModule'
-    // ...
-  };
-
-  // import `MyModule` to `AppModule`
-  const AppModule = {
-    name: 'AppModule',
-    imports: [MyModule]
-  };
-  ```
-
-  With the example above, `AppModule` will gain access to exported components of `MyModule`.
-
-- `components`
-
-  This is where components will be registered. You can pass in an array of `class` components like so:
-
-  ```javascript
-  // app.service.ts
-  class AppService {}
-
-  // app.module.ts
-  const AppModule = {
-    name: 'AppModule',
-    components: [AppService]
-  };
-  ```
-
-  For now, let's focus on registering components to the module metadata. [Components](#components) will have their own section and be discussed separately.
-
-  The `components` property can also be an object with the following properties:
-
-  - `class` - Class components array to register to the module.
-  - `function` - Function components array to register to the module.
-  - `async` - Async function components array to register to the module.
-
-  Example:
-
-  ```javascript
-  // assume components are imported from their own respective files
-  class ClassService {}
-  function FunctionService() {}
-  async function AsyncService() {} // returns promise
-
-  // app.module.ts
-  const AppModule = {
-    name: 'AppModule',
-    components: {
-      class: [ClassService],
-      function: [FunctionService],
-      async: [AsyncService]
-    }
-  };
-  ```
-
-- `exports`
-
-  Export registered components or imported modules' components.
-
-  ```javascript
-  const AppModule = {
-    name: 'AppModule',
-    components: [AppService],
-    exports: [AppService]
-  };
-  ```
-
-  Exported components will be accessible through the **module reference** of consuming modules that import that module.
-
-  You can also export the component by using its name.
-
-  ```javascript
-  const AppModule = {
-    name: 'AppModule',
-    components: [AppService],
-    exports: ['AppService'] // or [AppService.name]
-  };
-  ```
-
-  Although, depending on how you build your project, do take note that if there is some sort of minification step involved, it is possible your components' names may change. This may cause issues when using string names to reference the component.
-
-- `provide`
-
-  Provides registered components or imported modules' components to its descendants. Depending on how it is used, using `provide` can act like a global provider for a module's **submodules**.
-
-  Note that `imports` are treated as **submodules**.
-
-  ```javascript
-  const AppModule = {
-    name: 'AppModule',
-    imports: [MyModule, OtherModule1, OtherModule2],
-    components: [AppService],
-    provide: [MyModule, AppService]
-  };
-  ```
-
-  In the example above, the `AppService` component and the exported components of `MyModule` will be provided to `OtherModule1`, `OtherModule2`, and their descendants.
-
-  You can also use the name strings like so:
-
-  ```javascript
-  const AppModule = {
-    name: 'AppModule',
-    imports: [MyModule, OtherModule1, OtherModule2],
-    components: [AppService],
-    provide: ['MyModule', 'AppService'] // or [MyModule.name, AppService.name]
-  };
-  ```
-
-  Provided components won't be injected to the submodules unless they are defined in their `inject` property.
-
-- `inject`
-
-  Array of components which will determine if a provided component will be injected to the module.
-
-  ```javascript
-  const OtherModule1 = {
-    name: 'OtherModule1',
-    inject: [AppService]
-  };
-  ```
-
-  You can also use the name strings:
-
-  ```javascript
-  const OtherModule1 = {
-    name: 'OtherModule1',
-    inject: ['AppService'] // or [AppService.name]
-  };
-  ```
-
-  Set `inject` to `true` to accept all `provided` components and inject it to the module.
-
-  ```javascript
-  const OtherModule1 = {
-    name: 'OtherModule1',
-    inject: true
-  };
-  ```
-
-  Using our previous example a while back, `OtherModule1` will inject `AppService` and exported modules from `MyModule`.
-
-These properties can be [dynamic](#dynamic-modules) or changed through **register options** or **factory modules**. More importantly, what makes up a module is their **components**.
-
-### Components
-
-A **component** can be a `class`, `function`, or an `async function`. They contain your application logic, or at least subset of it.
-
-Components, excluding `async` components, will have access to a **module reference** by **forward**ing itself.
-
----
-
-Async function components are simply functions that return a promise.
+The `metadata.imports` property is an array of modules to import for the module. This module will gain access to the exported [components](#components) ([`metadata.exports`](#metadataexports)) of the imported modules.
 
 ```javascript
-async function AsyncService() {
-  // ... do something async
-  return value;
-}
+// my.module.js
+const MyModule = {
+  name: 'MyModule'
+  // ...
+};
+
+// app.module.js
+// import `MyModule` to `AppModule`
+const AppModule = {
+  name: 'AppModule',
+  imports: [MyModule]
+};
 ```
 
-You register them into `async` components:
+With the example above, `AppModule` will gain access to exported components of `MyModule`.
+
+#### `metadata.components`
+
+The `metadata.components` property is an array where **components** will be registered.
+
+> **Note**: For now, let's focus on registering components to the **module metadata**. [Components](#components) will have their own section and will be discussed separately.
+
+There are 2 ways to register components.
+
+1. You can pass in an array of `class` components like so:
+
+   ```javascript
+   // app.component.js
+   class AppComponent {}
+
+   // app.module.js
+   const AppModule = {
+     name: 'AppModule',
+     components: [AppComponent]
+   };
+   ```
+
+2. Register components as objects depending on their component type (`class`, `function`, `async function`, `value`).
+
+   ```javascript
+   // assume components are imported from their own respective files
+   class ClassComponent {}
+   function FunctionComponent() {}
+   async function AsyncComponent() {}
+
+   // app.module.js
+   const AppModule = {
+     name: 'AppModule',
+     components: [
+       { class: ClassComponent },
+       { function: FunctionComponent },
+       { async: AsyncComponent },
+       { ref: 'APP_VALUE', value: {} } // any value
+     ]
+   };
+   ```
+
+These registered components will now be accessible by the [module reference](#module-reference), like so:
+
+```javascript
+const component = moduleRef.get(ClassComponent);
+```
+
+> **Note**: The [module reference](#module-reference) will also be discussed in a separate section.
+
+When registering module components as objects, they can also accept a `ref` property. This `ref` property can be a `string`, `symbol`, the same type as the component, or an array of those together.
+
+```javascript
+// assume components are imported from their own respective files
+class ClassComponent {}
+function FunctionComponent() {}
+async function AsyncComponent() {}
+
+const FN_SYMBOL = Symbol('APP_FUNCTION');
+
+// app.module.js
+const AppModule = {
+  name: 'AppModule',
+  components: [
+    { ref: 'APP_CLASS', class: ClassComponent },
+    { ref: [FN_SYMBOL, 'APP_FUNCTION'], function: FunctionComponent },
+    { ref: ['APP_ASYNC'], async: AsyncComponent },
+    { ref: 'APP_VALUE', value: {} } // any value
+  ]
+};
+```
+
+You can use these `ref`s to reference the component via the [module reference](#module-reference).
+
+```typescript
+// classComponent1 === classComponent2
+const classComponent1 = moduleRef.get(ClassComponent);
+const classComponent2 = moduleRef.get<ClassComponent>('APP_CLASS');
+
+const functionComponentValue =
+  moduleRef.get<ReturnType<typeof FunctionComponent>>(FN_SYMBOL);
+
+const asyncComponentValue = moduleRef.get(AsyncComponent);
+
+const value = moduleRef.get<Record<string, any>>('APP_VALUE');
+```
+
+Also, it is important to note that the `ref` property is **required** for `value` components.
+
+Here are valid refs for each component type:
+
+| Component Type | Valid Refs                                       |
+| -------------- | ------------------------------------------------ |
+| `class`        | `string`, `symbol`, any Class component          |
+| `function`     | `string`, `symbol`, any Function component       |
+| `async`        | `string`, `symbol`, any Async function component |
+| `value`        | `string`, `symbol`                               |
+
+#### `metadata.exports`
+
+The `metadata.exports` property is an array of registered components, refs, or imported modules' components.
 
 ```javascript
 const AppModule = {
   name: 'AppModule',
-  components: {
-    async: [AsyncService]
-  },
-  exports: [AsyncService]
+  components: [AppComponent],
+  exports: [AppComponent]
 };
 ```
 
-When the module is initialized, registered `async` components will resolve first before other components.
+Exported components will be accessible through the [module reference](#module-reference) of consuming modules that import that module.
 
----
+```javascript
+const component = moduleRef.get(AppComponent);
+```
 
-Class and function components are simply your typical classes and functions respectively.
+You can also export the component by using its refs.
 
-- Class component:
+```javascript
+const AppModule = {
+  name: 'AppModule',
+  components: [{ ref: 'APP_CLASS', class: AppComponent }],
+  exports: ['APP_CLASS']
+};
+```
 
-  ```javascript
-  class AppService {
-    hello() {
-      console.log('Hello World!');
-    }
-  }
-  ```
+Using the example above, modules that import `AppModule` will be able to access `AppComponent` through `'APP_CLASS'` but not `AppComponent` itself.
 
-- Function component:
+```typescript
+moduleRef.get(AppComponent); // error
+moduleRef.get<AppComponent>('APP_CLASS'); // ok
+```
 
-  ```javascript
-  function AppService() {
-    return {
-      hello() {
-        console.log('Hello World!');
-      }
-    };
-  }
-  ```
+#### `metadata.provide`
 
-These components can get registered to a module. This will give them access to a `ForwardRef` function that returns a **module reference**.
+The `metadata.provide` property is an array that accepts registered components, refs, or imported modules' components. Components or refs included here are provided to the module's descendants.
 
-- Class component:
+```javascript
+const AppModule = {
+  name: 'AppModule',
+  imports: [MyModule, OtherModule1, OtherModule2],
+  components: [AppComponent],
+  provide: [MyModule, AppComponent]
+};
+```
 
-  ```typescript
-  import { ForwardRef } from 'moqule';
+In the example above, the `AppComponent` component and the exported components of `MyModule` will be provided to `MyModule`, `OtherModule1`, `OtherModule2`, and their descendants.
 
-  class AppService {
-    constructor(forward: ForwardRef<AppService>) {
-      const moduleRef = forward(this);
-    }
-    hello() {
-      console.log('Hello World!');
-    }
-  }
-  ```
+> **Tip**: Depending on how it is used, using `provide` can act like a global provider for the module and distribute those components to its **submodules**. Note that [`metadata.imports`](#metadataimports) are treated as **submodules**.
 
-- Function component:
+You can also use the module name or the component refs like so:
 
-  ```typescript
-  import { ForwardRef } from 'moqule';
+```javascript
+const AppModule = {
+  name: 'AppModule',
+  imports: [MyModule, OtherModule1, OtherModule2],
+  components: [{ ref: 'APP_CLASS', class: AppComponent }],
+  provide: [MyModule.name, 'APP_CLASS']
+};
+```
 
-  interface AppServiceValue {
-    hello(): void;
-  }
+Provided components won't be injected to the submodules unless they are defined in their [`metadata.inject`](#metadatainject) property.
 
-  function AppService(forward: ForwardRef<AppServiceValue>): AppServiceValue {
-    const value: AppServiceValue = {
-      hello() {
-        console.log('Hello World!');
-      }
-    };
-    const moduleRef = forward(value);
-    return value;
-  }
-  ```
+#### `metadata.inject`
 
-Notice that the `ForwardRef` function takes in the return value of the component.
+The `metadata.inject` property is an array of components or refs which will determine if a provided component will be injected to the module.
 
-- `class` components reference themselves through `this`:
+```javascript
+const OtherModule1 = {
+  name: 'OtherModule1',
+  inject: [AppComponent]
+};
+```
 
-  ```javascript
-  const moduleRef = forward(this);
-  ```
+Set `inject` to `true` to accept all `provided` components and inject it to the module.
 
-- `function` components reference their return value:
+```javascript
+const OtherModule1 = {
+  name: 'OtherModule1',
+  inject: true
+};
+```
 
-  ```javascript
-  const moduleRef = forward(value);
-  ```
+Using our previous [example](#metadataprovide) a while back, `OtherModule1` will inject and gain access to `AppComponent` and exported components from `MyModule`.
 
----
+### Components
 
-It should be noted that `moqule` requires that the _first_ and only _required_ parameter of the class component constructor and the function component to be a `ForwardRef`.
+A **component** contains a part of your application. Components have different types: `class`, `function`, an `async function`, or any `value`.
 
-If you do end up needing other required parameters for your components, you can create a wrapper function and register that function as the component instead.
+#### Class Components
 
-Example `app.service.ts`:
+Class components are classes that require that their _first_ and _only required_ constructor parameter be a `ForwardRef`.
 
 ```typescript
 import { ForwardRef } from 'moqule';
 
-export class AppService {
+class AppComponent {
+  constructor(forward: ForwardRef<AppComponent>) {
+    const moduleRef = forward(this);
+    // do stuff with moduleRef
+  }
+  hello() {
+    console.log('Hello %s!', this.name);
+  }
+}
+```
+
+A `ForwardRef` is a callback function that accepts the value of the component (i.e. for class components, it is the instance or `this`) and returns the [module reference](#module-reference).
+
+#### Function Components
+
+Similar to [class components](#class-components), function components are functions that have the `ForwardRef` as their _first_ and _only required_ function parameter.
+
+```typescript
+import { ForwardRef } from 'moqule';
+
+interface AppComponentValue {
+  hello(): void;
+}
+
+function AppComponent(
+  forward: ForwardRef<AppComponentValue>
+): AppComponentValue {
+  const value: AppComponentValue = {
+    hello() {
+      console.log('Hello World!');
+    }
+  };
+  const moduleRef = forward(value);
+  return value;
+}
+```
+
+Notice that the `ForwardRef` function takes in the return value of the component.
+
+If you do end up needing other required parameters for your components, you can use **function components** as a wrapper and register that function as the component instead.
+
+```typescript
+import { ForwardRef } from 'moqule';
+
+class AppComponent {
   // notice required parameter "name"
-  constructor(forward: ForwardRef<AppService>, private readonly name: string) {
+  constructor(
+    forward: ForwardRef<AppComponent>,
+    private readonly name: string
+  ) {
     const moduleRef = forward(this);
     // do stuff with moduleRef
   }
@@ -389,201 +390,72 @@ export class AppService {
 }
 
 // a function component wrapper
-export function AppServiceWrapper(forward: ForwardRef<AppService>): AppService {
-  return new AppService(forward, 'World');
+function AppComponentWrapper(forward: ForwardRef<AppComponent>): AppComponent {
+  return new AppComponent(forward, 'World');
 }
+
+// app.module.ts
+const AppModule: Module = {
+  name: 'AppModule',
+  components: [{ ref: 'APP_COMPONENT', function: AppComponentWrapper }]
+};
 ```
 
-And in `app.module.ts`:
+```typescript
+// reference via moduleRef:
+// type `AppComponent` is inferred
+const component = moduleRef.get(AppComponentWrapper);
+```
+
+You can also register them directly into the [module](#module-declaration) like so:
 
 ```typescript
-import { Module } from 'moqule';
-import { AppServiceWrapper } from './app.service.ts';
+import { ForwardRef, Module } from 'moqule';
 
 const AppModule: Module = {
   name: 'AppModule',
-  components: {
-    function: [AppServiceWrapper]
-  },
-  exports: [AppServiceWrapper]
+  components: [
+    {
+      ref: 'APP_COMPONENT',
+      function: (forward: ForwardRef<AppComponent>): AppComponent => {
+        return new AppComponent(forward, 'World');
+      }
+    }
+  ]
 };
 ```
 
-With this example, the `AppServiceWrapper` function component becomes the component instead of the `AppService` class.
+```typescript
+// reference via moduleRef:
+const component = moduleRef.get<AppComponent>('APP_COMPONENT');
+```
 
-The same idea applies to `function` components.
+#### Async Function Components
 
-Also, for `class` components, you can create a static function that acts as the function component wrapper which then creates your class instance.
+> **TODO:** update section
 
-In any case, it is up to you how you want to setup and register your components. It is also up to you what components you would like to reference in your component using **module reference**.
+#### Value Components
+
+> **TODO:** update section
 
 ### Module Reference
 
-The **module reference** is an object that has a reference to the components of a module declaration.
-
-Consider the following module:
-
-```javascript
-const AppModule = {
-  name: 'AppModule',
-  imports: [MyModule],
-  components: [AppService, OtherService]
-};
-```
-
-The module reference for the `AppModule` will be able to reference the `AppService` and `OtherService` components, as well as the exported components of `MyModule`.
-
-```typescript
-interface ModuleRef {
-  name: string;
-  get<T = unknown>(id: string | Component<T>): Awaited<T>;
-  getOptional<T = unknown>(id: string | Component<T>): Awaited<T> | undefined;
-  onInit(listener: () => void): void;
-}
-```
-
-It is mainly used within the components (the return value of the `FowardRef` function).
-
-- `name`
-
-  This pertains to the module name. In our example module above, the name is `'AppModule'`.
-
-- `get(id)`
-
-  The `get` method is used to get the component value that is accessible to the module.
-
-  ```typescript
-  class AppService {
-    constructor(forward: ForwardRef<AppService>) {
-      const moduleRef = forward(this);
-      const otherService = moduleRef.get(OtherService);
-    }
-  }
-  ```
-
-  You can also use the name strings:
-
-  ```typescript
-  class AppService {
-    constructor(forward: ForwardRef<AppService>) {
-      const moduleRef = forward(this);
-      const otherService = moduleRef.get<OtherService>('OtherService');
-    }
-  }
-  ```
-
-  If the component is not found within the module (or it is `undefined`), an error is thrown. If the component is intended to be optional, you can use `moduleRef.getOptional(id)` instead.
-
-- `getOptional(id)`
-
-  The `getOptional` method has same usage as `get`. The only difference is that it will not throw an error if the component was not found or `undefined`.
-
-  ```javascript
-  class AppService {
-    constructor(forward) {
-      const moduleRef = forward(this);
-      // "otherService" type is `OtherService | undefined`
-      const otherService = moduleRef.getOptional(OtherService);
-    }
-  }
-  ```
-
-- `onInit(listener)`
-
-  The registered listener will be called once the module has been initialized.
-
-  ```javascript
-  class AppService {
-    constructor(forward) {
-      const moduleRef = forward(this);
-      const otherService = moduleRef.get(OtherService);
-      moduleRef.onInit(() => {
-        otherService.method();
-      });
-    }
-  }
-  ```
-
-  If you are certain that your components have circular dependencies, it is recommended that you only access component properties or call its methods after the module has been initialized. In other words, access the properties or call the methods within the `onInit` listener.
-
-  The reason is that a component may not be fully initialized yet if you have circular dependencies (e.g. class methods not yet included, etc.).
-
-Depending on where and what module the component is registered, it will receive a different **module reference** that has a reference to its module's available components.
-
-However, the **module reference** is not only accessible through the components, but also when a module is initialized.
+> **TODO:** update section
 
 ### Initialize Module Declaration
 
-Start calling/instantiating the module declaration's components by initializing the module.
-
-```javascript
-import * as moqule from 'moqule';
-// or
-const moqule = require('moqule');
-```
-
-You can either initialize the module synchronously or asynchronously depending on whether your module includes async components or not.
-
-- `moqule.init(module, options?)`
-
-  This will initialize synchronously and will immediately return the **module reference**.
-
-  ```javascript
-  const moduleRef = moqule.init(MyModule);
-  ```
-
-  Async components will load asynchronously and most may not be resolved yet which could cause issues when a component tries to reference them via the **module reference**.
-
-- `moqule.initAsync(module, options?)`
-
-  This will initialize asynchronously and will wait for async components to load first before resolving the promise.
-
-  ```javascript
-  const moduleRef = await moqule.initAsync(MyModule);
-  ```
-
-Depending on your use case, you can initialize the same module more than once. This will call or instantiate its components again that is accessible to the **module reference** that it returns.
-
-```javascript
-class MyComponent {}
-
-const MyModule = {
-  name: 'MyModule',
-  components: [MyComponent],
-  exports: [MyComponent]
-};
-
-const AppModule = {
-  name: 'AppModule',
-  imports: [MyModule]
-};
-
-// each init() call will call/instantiate components
-const appRef = moqule.init(AppModule);
-const appRef2 = moqule.init(AppModule);
-const myRef = moqule.init(MyModule);
-
-// get MyComponent from different module refs
-const c1 = appRef.get(MyComponent);
-const c2 = appRef2.get(MyComponent);
-const c3 = myRef.get(MyComponent);
-
-// different instances
-console.log(c1 !== c2); // true
-console.log(c1 !== c3); // true
-console.log(c2 !== c3); // true
-```
+> **TODO:** update section
 
 ### Dynamic Modules
 
-> A **work in progress**.
+> **TODO:** update section
 
 ## Basic Example
 
 ```javascript
 const moqule = require('moqule');
 
-class HelloService {
+class HelloComponent {
   constructor(forward) {
     this.moduleRef = forward(this);
   }
@@ -594,12 +466,12 @@ class HelloService {
 
 const AppModule = {
   name: 'AppModule',
-  components: [HelloService]
+  components: [HelloComponent]
 };
 
 const moduleRef = moqule.init(AppModule);
-const helloService = moduleRef.get(HelloService);
-helloService.hello();
+const helloComponent = moduleRef.get(HelloComponent);
+helloComponent.hello();
 ```
 
 Output:
