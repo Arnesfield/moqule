@@ -1,11 +1,13 @@
 import runAll from 'npm-run-all';
 
 const args = process.argv.slice(2);
+const isNode = false;
 const WATCH = args.includes('-w');
 const PROD = !WATCH || args.includes('-p');
 
 const esbuildOpts = [
   '--bundle --outdir=lib',
+  isNode && '--platform=node',
   WATCH && '--watch',
   PROD && '--sourcemap'
 ];
@@ -38,4 +40,4 @@ runAll(scripts, {
   stdin: process.stdin,
   stdout: process.stdout,
   stderr: process.stderr
-}).catch(() => {});
+}).catch(error => process.exit(error.code));
