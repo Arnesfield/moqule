@@ -30,18 +30,15 @@
   "scripts": {
     "prebuild": "rimraf lib",
     "build": "node scripts/build",
-    "build:js": "esbuild src/index.ts",
-    "build:rollup": "rollup -c",
-    "check": "npm-run-all -p lint:strict ts",
+    "check": "concurrently -r --kill-others-on-fail npm:lint:strict \"tsc --noEmit\"",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
     "lint:strict": "npm run lint -- --max-warnings 0",
     "start": "npm run build -- -w",
     "start:prod": "npm run build -- -w -p",
-    "test": "npm-run-all -s test:mocha check",
+    "test": "concurrently -r --kill-others-on-fail npm:test:mocha npm:check",
     "test:mocha": "mocha -r esbuild-runner/register **/*.spec.ts",
-    "test:watch": "npm run test:mocha -- --watch --watch-files src",
-    "ts": "tsc --noEmit"
+    "test:watch": "npm run test:mocha -- --watch --watch-files src"
   },
   "devDependencies": {
     "@rollup/plugin-eslint": "^9.0.1",

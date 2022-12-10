@@ -1,43 +1,55 @@
-import runAll from 'npm-run-all';
+import concurrently from 'concurrently';
 
-const args = process.argv.slice(2);
-const isNode = false;
-const WATCH = args.includes('-w');
-const PROD = !WATCH || args.includes('-p');
+/** @type {Record<string, boolean>} */
+const args = {};
+for (const arg of process.argv.slice(2)) {
+  args[arg] = true;
+}
+const ARGS = {
+  watch: args['-w'],
+  production: !args['-w'] || args['-p'],
+  isNode: args['--node'],
+  js: args['--js'],
+  rollup: args['--rollup'],
+  noCheck: args['--no-check']
+};
 
-const esbuildOpts = [
-  '--bundle --outdir=lib',
-  isNode && '--platform=node',
-  WATCH && '--watch',
-  PROD && '--sourcemap'
-];
-const cjs = [
-  'build:js',
-  '--format=cjs --out-extension:.js=.cjs',
-  ...esbuildOpts
-];
-const esm = [
-  'build:js',
-  '--format=esm --out-extension:.js=.mjs',
-  WATCH && '--log-level=silent',
-  ...esbuildOpts
-];
+function esbuild(options) {
+  return [
+    (ARGS.js || !ARGS.rollup) && 'esbuild',
+    'src/index.ts',
+    '--bundle --outdir=lib',
+    ARGS.isNode && '--platform=node',
+    ARGS.watch && '--watch',
+    ARGS.production && '--sourcemap',
+    ...options
+  ];
+}
+
+const check = [!ARGS.watch && !ARGS.noCheck && 'npm:check'];
+const cjs = esbuild(['--format=cjs', '--out-extension:.js=.cjs']);
+const esm = esbuild([
+  '--format=esm',
+  '--out-extension:.js=.mjs',
+  ARGS.watch && '--log-level=silent'
+]);
 const rollup = [
-  'build:rollup',
-  WATCH && '--watch --no-watch.clearScreen',
-  PROD && '--environment NODE_ENV:production'
+  (!ARGS.js || ARGS.rollup) && 'rollup',
+  '-c',
+  ARGS.watch && '--watch --no-watch.clearScreen',
+  ARGS.production && '--environment NODE_ENV:production'
 ];
 
-const scripts = [cjs, esm, rollup].map(s => {
-  s = s.filter(arg => arg);
-  s = s.length > 1 ? s.slice(0, 1).concat('--', s.slice(1)) : s;
-  return s.join(' ');
-});
-!WATCH && scripts.unshift('check');
+const commands = [check, cjs, esm, rollup]
+  .filter(script => script[0])
+  .map(script => script.filter(s => s).join(' '));
 
-runAll(scripts, {
-  parallel: true,
-  stdin: process.stdin,
-  stdout: process.stdout,
-  stderr: process.stderr
-}).catch(error => process.exit(error.code));
+const { result } = concurrently(commands, { raw: true, killOthers: 'failure' });
+result.catch(error => {
+  /** @type {import('concurrently').CloseEvent[]} */
+  const events = Array.isArray(error) ? error : [];
+  const event = events.find(
+    event => typeof event.exitCode === 'number' && event.exitCode !== 0
+  );
+  process.exitCode = event ? event.exitCode : 1;
+});
