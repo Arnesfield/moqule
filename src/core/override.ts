@@ -1,8 +1,9 @@
 import { COMPONENT_TYPES } from '../constants/componentTypes.constant';
 import { initialize } from '../module/initialize';
-import { Component, ForwardRef } from '../types/component.types';
+import { ForwardRef } from '../types/component.types';
 import { ComponentFactory } from '../types/componentFactory.types';
 import { Override } from '../types/override.types';
+import { Ref } from '../types/ref.types';
 import { defineProperties } from '../utils/defineProperties';
 
 /**
@@ -13,7 +14,7 @@ export function override(): Override {
   const override = { components: [] as ComponentFactory[] } as Override;
   for (const type of COMPONENT_TYPES) {
     override[type] = <T = unknown>(
-      ref: string | symbol | Component<T>,
+      ref: Ref,
       factory: (forwardRef: ForwardRef<T>) => any
     ) => {
       override.components.push({ type, ref, factory } as ComponentFactory<T>);

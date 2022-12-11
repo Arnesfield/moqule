@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ModuleRef } from '../../types';
+import { ModuleRef } from '../../types/moduleRef.types';
 
 export function expectModuleRef(moduleRef: ModuleRef): void {
   expect(moduleRef).to.be.an('object');

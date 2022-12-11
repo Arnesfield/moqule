@@ -14,7 +14,7 @@ export interface BaseModule {
  * Module with metadata.
  */
 export interface ModuleWithMetadata extends BaseModule, ModuleMetadata {
-  register?: undefined;
+  register?: never;
 }
 
 /**

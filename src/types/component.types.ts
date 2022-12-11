@@ -30,7 +30,7 @@ export interface ClassComponent<T = unknown> {
 export type FunctionComponent<T = unknown> = (forwardRef: ForwardRef<T>) => T;
 
 /**
- * Async component.
+ * Async function component.
  * @template T The component value or instance type.
  * @returns The async component value or instance.
  */

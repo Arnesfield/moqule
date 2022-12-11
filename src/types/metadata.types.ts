@@ -1,19 +1,28 @@
 import {
   AsyncComponent,
   ClassComponent,
-  Component,
   FunctionComponent
 } from './component.types';
 import { Module, RegisteredModule } from './module.types';
+import { Ref } from './ref.types';
 
 /**
- * Class component to register for the module.
+ * Base module component.
+ * @template T The component value or instance type.
  */
-export interface ModuleClassComponent<T = unknown> {
+export interface BaseModuleComponent<T = unknown> {
   /**
    * Value or array of values to reference the component.
    */
-  ref?: string | symbol | ClassComponent | (string | symbol | ClassComponent)[];
+  ref?: Ref<T> | Ref<T>[];
+}
+
+/**
+ * Class component to register for the module.
+ * @template T The component value or instance type.
+ */
+export interface ClassModuleComponent<T = unknown>
+  extends BaseModuleComponent<T> {
   /**
    * The class component.
    */
@@ -25,16 +34,10 @@ export interface ModuleClassComponent<T = unknown> {
 
 /**
  * Function component to register for the module.
+ * @template T The component value or instance type.
  */
-export interface ModuleFunctionComponent<T = unknown> {
-  /**
-   * Value or array of values to reference the component.
-   */
-  ref?:
-    | string
-    | symbol
-    | FunctionComponent
-    | (string | symbol | FunctionComponent)[];
+export interface FunctionModuleComponent<T = unknown>
+  extends BaseModuleComponent<T> {
   class?: never;
   /**
    * The function component.
@@ -46,12 +49,10 @@ export interface ModuleFunctionComponent<T = unknown> {
 
 /**
  * Async function component to register for the module.
+ * @template T The component value or instance type.
  */
-export interface ModuleAsyncComponent<T = unknown> {
-  /**
-   * Value or array of values to reference the component.
-   */
-  ref?: string | symbol | AsyncComponent | (string | symbol | AsyncComponent)[];
+export interface AsyncModuleComponent<T = unknown>
+  extends BaseModuleComponent<T> {
   class?: never;
   function?: never;
   /**
@@ -63,12 +64,10 @@ export interface ModuleAsyncComponent<T = unknown> {
 
 /**
  * Value component to register for the module.
+ * @template T The component value or instance type.
  */
-export interface ModuleValueComponent<T = unknown> {
-  /**
-   * Value or array of values to reference the component.
-   */
-  ref: string | symbol | (string | symbol)[];
+export interface ValueModuleComponent<T = unknown>
+  extends BaseModuleComponent<T> {
   class?: never;
   function?: never;
   async?: never;
@@ -80,19 +79,20 @@ export interface ModuleValueComponent<T = unknown> {
 
 /**
  * Module component.
+ * @template T The component value or instance type.
  */
 export type ModuleComponent<T = unknown> =
-  | ModuleClassComponent<T>
-  | ModuleFunctionComponent<T>
-  | ModuleAsyncComponent<T>
-  | ModuleValueComponent<T>;
+  | ClassModuleComponent<T>
+  | FunctionModuleComponent<T>
+  | AsyncModuleComponent<T>
+  | ValueModuleComponent<T>;
 
 /**
  * Module metadata.
  */
 export interface ModuleMetadata {
   /**
-   * Imported modules (treated as submodules).
+   * Modules to import into this module (treated as submodules).
    */
   imports?: (Module | RegisteredModule)[];
   /**
@@ -102,14 +102,14 @@ export interface ModuleMetadata {
   /**
    * Modules, components, name, or symbol to export.
    */
-  exports?: (string | symbol | Module | Component)[];
+  exports?: (Module | Ref)[];
   /**
    * Components, submodule components, name, or symbol to provide for submodules.
    */
-  provide?: (string | symbol | Module | Component)[];
+  provide?: (Module | Ref)[];
   /**
    * Accept provided components from ancestor modules.
    * Set to `true` to inject all provided components.
    */
-  inject?: boolean | (string | symbol | Component)[];
+  inject?: boolean | Ref[];
 }

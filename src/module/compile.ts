@@ -2,8 +2,8 @@ import { register } from '../core/register';
 import { Component } from '../types/component.types';
 import { ComponentFactory } from '../types/componentFactory.types';
 import {
+  ComponentInstance,
   ComponentList,
-  ComponentRef,
   ModuleInstance
 } from '../types/instance.types';
 import { ModuleComponent } from '../types/metadata.types';
@@ -157,7 +157,7 @@ class Compiler {
   private createComponent<T = unknown>(
     value: ModuleComponent<T>,
     moduleRef: ModuleRef
-  ): ComponentRef<T> {
+  ): ComponentInstance<T> {
     const [type, ref] = value.class
       ? (['class', value.class] as const)
       : value.function
@@ -167,25 +167,26 @@ class Compiler {
       : (['value', value.value] as const);
     const allRefs = Array.isArray(value.ref)
       ? value.ref
-      : typeof value.ref !== 'undefined' || value.ref === null
+      : typeof value.ref !== 'undefined' && value.ref !== null
       ? [value.ref]
       : [];
     // include self in refs
-    const refs = (
-      type === 'value' ? allRefs : ([ref] as typeof allRefs).concat(allRefs)
-    ) as ComponentRef<T>['refs'];
+    const refs = type === 'value' ? allRefs : [ref, ...allRefs];
     const component = (
       type === 'value'
         ? { type, refs, value: ref }
         : type === 'async'
         ? { type, ref, refs }
         : { type, ref, refs, moduleRef }
-    ) as ComponentRef<T>;
-    component.factory = this.overrides.find(
+    ) as ComponentInstance<T>;
+    const override = this.overrides.find(
       (item): item is ComponentFactory<T> => {
         return item.type === type && compare(item.ref, refs);
       }
-    )?.factory;
+    );
+    if (override) {
+      component.factory = override.factory;
+    }
     return component;
   }
 }

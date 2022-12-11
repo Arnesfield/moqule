@@ -1,12 +1,12 @@
 import { Component } from '../types/component.types';
-import { ComponentRef, ModuleInstance } from '../types/instance.types';
+import { ComponentInstance, ModuleInstance } from '../types/instance.types';
 import { Module } from '../types/module.types';
 import { compare } from '../utils/compare';
 import { isRegisteredModule } from '../utils/isRegisteredModule';
 
 type ModuleOrComponent<T = unknown> =
-  | { readonly module: ModuleInstance<T>; readonly component?: undefined }
-  | { readonly module?: undefined; readonly component: ComponentRef<T> };
+  | { readonly module: ModuleInstance<T>; readonly component?: never }
+  | { readonly module?: never; readonly component: ComponentInstance<T> };
 
 function findModuleOrComponent(
   instance: ModuleInstance,
@@ -39,8 +39,8 @@ function findModuleOrComponent(
 function getProvidedComponents(
   instance: ModuleInstance,
   instances: ModuleInstance[]
-): ComponentRef[] {
-  const components: ComponentRef[] = [];
+): ComponentInstance[] {
+  const components: ComponentInstance[] = [];
   for (const id of instance.metadata.provide || []) {
     const result = findModuleOrComponent(instance, id, instances);
     if (!result) {
@@ -68,7 +68,7 @@ function getProvidedComponents(
 
 function injectComponents(
   target: ModuleInstance,
-  providedComponents: ComponentRef[]
+  providedComponents: ComponentInstance[]
 ) {
   // include only if in inject options and not yet injected
   const { components } = target;

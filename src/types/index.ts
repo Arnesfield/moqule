@@ -4,3 +4,4 @@ export * from './metadata.types';
 export * from './module.types';
 export * from './moduleRef.types';
 export * from './override.types';
+export * from './ref.types';

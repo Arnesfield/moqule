@@ -1,59 +1,60 @@
 import { ForwardRef } from '../types/component.types';
-import { ComponentRef, ModuleInstance } from '../types/instance.types';
+import {
+  ClassComponentInstance,
+  ComponentInstance,
+  FunctionComponentInstance,
+  ModuleInstance
+} from '../types/instance.types';
+
+/**
+ * Create a forward reference.
+ * @param component The component instance.
+ * @returns The forward reference.
+ */
+function createForwardRef<T = unknown>(
+  component: ClassComponentInstance<T> | FunctionComponentInstance<T>
+): ForwardRef<T> {
+  return value => {
+    component.value = value;
+    return component.moduleRef;
+  };
+}
 
 /**
  * Resolve the component value.
- * @param component The component reference.
+ * @param component The component instance.
  * @returns The component value.
  */
 export function resolveComponent<T = unknown>(
-  component: ComponentRef<T>
+  component: ComponentInstance<T>
 ): Awaited<T> {
   if (component.resolved) {
     return component.value as Awaited<T>;
   }
   component.resolved = true;
   const { factory, ref, type } = component;
+  const hasFactory = typeof factory === 'function';
   if (type === 'value') {
-    if (typeof factory === 'function') {
+    if (hasFactory) {
       component.value = factory();
     }
   } else if (type === 'async') {
     // handle async
-    const promise = (component.asyncValue = Promise.resolve(
-      typeof factory === 'function' ? factory() : ref()
-    ));
-    promise.then(result => {
+    component.asyncValue = Promise.resolve(hasFactory ? factory() : ref());
+    component.asyncValue.then(result => {
       component.value = result;
       delete component.asyncValue;
     });
   } else {
-    const forwardRef: ForwardRef<T> = value => {
-      component.value = value;
-      return component.moduleRef;
-    };
-    component.value =
-      typeof factory === 'function'
-        ? factory(forwardRef)
-        : type === 'class'
-        ? new ref(forwardRef)
-        : ref(forwardRef);
+    const forwardRef = createForwardRef(component);
+    component.value = hasFactory
+      ? factory(forwardRef)
+      : type === 'class'
+      ? new ref(forwardRef)
+      : ref(forwardRef);
   }
   delete component.factory;
   return component.value as Awaited<T>;
-}
-
-function iterate(instances: ModuleInstance[], async: boolean) {
-  const promises: (Promise<unknown> | undefined)[] = [];
-  for (const { components } of instances) {
-    for (const component of components.self) {
-      if (async === (component.type === 'async')) {
-        resolveComponent(component);
-        async && promises.push(component.asyncValue);
-      }
-    }
-  }
-  return promises;
 }
 
 /**
@@ -66,10 +67,24 @@ export async function resolveComponents(
   callback: () => void
 ): Promise<void> {
   // resolve async components first if any
-  const promises = iterate(instances, true);
+  const promises: (Promise<unknown> | undefined)[] = [];
+  for (const instance of instances) {
+    for (const component of instance.components.self) {
+      if (component.type === 'async') {
+        resolveComponent(component);
+        promises.push(component.asyncValue);
+      }
+    }
+  }
   if (promises.length > 0) {
     await Promise.all(promises);
   }
-  iterate(instances, false);
+  for (const instance of instances) {
+    for (const component of instance.components.self) {
+      if (component.type !== 'async') {
+        resolveComponent(component);
+      }
+    }
+  }
   callback();
 }

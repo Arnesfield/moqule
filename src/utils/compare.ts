@@ -1,6 +1,5 @@
-import { Component } from '../types/component.types';
-import { ComponentRef } from '../types/instance.types';
 import { Module } from '../types/module.types';
+import { Ref } from '../types/ref.types';
 
 /**
  * Compare module, component, componentRef, name, or symbol.
@@ -9,8 +8,8 @@ import { Module } from '../types/module.types';
  * @returns Boolean which determines if `a` and `b` match.
  */
 export function compare(
-  a: string | symbol | Module | Component | ComponentRef['refs'],
-  b: string | symbol | Module | Component | ComponentRef['refs']
+  a: Module | Ref | Ref[],
+  b: Module | Ref | Ref[]
 ): boolean {
   const aArr = Array.isArray(a);
   const bArr = Array.isArray(b);

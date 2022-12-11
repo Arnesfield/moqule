@@ -1,9 +1,4 @@
 import {
-  AsyncComponent,
-  ClassComponent,
-  FunctionComponent
-} from './component.types';
-import {
   AsyncComponentFactory,
   ClassComponentFactory,
   ComponentFactory,
@@ -12,6 +7,7 @@ import {
 } from './componentFactory.types';
 import { Module } from './module.types';
 import { ModuleRef } from './moduleRef.types';
+import { Ref } from './ref.types';
 
 /**
  * Override object.
@@ -23,42 +19,42 @@ export interface Override {
   readonly components: ComponentFactory[];
   /**
    * Override class component.
-   * @param ref The class component to override.
+   * @param ref The reference to override.
    * @param factory Function that returns the component value.
    * @returns The override object.
    */
   class<T = unknown>(
-    ref: string | symbol | ClassComponent<T>,
+    ref: Ref,
     factory: ClassComponentFactory<T>['factory']
   ): this;
   /**
    * Override function component.
-   * @param ref The function component to override.
+   * @param ref The reference to override.
    * @param factory Function that returns the component value.
    * @returns The override object.
    */
   function<T = unknown>(
-    ref: string | symbol | FunctionComponent<T>,
+    ref: Ref,
     factory: FunctionComponentFactory<T>['factory']
   ): this;
   /**
    * Override async function component.
-   * @param ref The async function component to override.
+   * @param ref The reference to override.
    * @param factory Function that returns the component value.
    * @returns The override object.
    */
   async<T = unknown>(
-    ref: string | symbol | AsyncComponent<T>,
+    ref: Ref,
     factory: AsyncComponentFactory<T>['factory']
   ): this;
   /**
    * Override value component.
-   * @param ref The value component to override.
+   * @param ref The reference to override.
    * @param factory Function that returns the component value.
    * @returns The override object.
    */
   value<T = unknown>(
-    ref: string | symbol,
+    ref: Ref,
     factory: ValueComponentFactory<T>['factory']
   ): this;
   /**

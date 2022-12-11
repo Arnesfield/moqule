@@ -1,5 +1,5 @@
 import { Component } from '../types/component.types';
-import { ComponentList, ComponentRef } from '../types/instance.types';
+import { ComponentInstance, ComponentList } from '../types/instance.types';
 import { ModuleRef } from '../types/moduleRef.types';
 import { compare } from '../utils/compare';
 import { defineProperties } from '../utils/defineProperties';
@@ -31,7 +31,7 @@ export function createModuleRef(
       list.self.find(c => compare(id, c.refs)) ||
       list.imported.find(c => c.exportRefs && compare(id, c.exportRefs)) ||
       list.injected.find(c => c.provideRefs && compare(id, c.provideRefs));
-    return component && resolveComponent(component as ComponentRef<T>);
+    return component && resolveComponent(component as ComponentInstance<T>);
   };
 
   const get: ModuleRef['get'] = <T = unknown>(
